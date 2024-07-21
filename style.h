@@ -1,0 +1,17 @@
+#ifndef __HAVE_STYLE_H
+#define __HAVE_STYLE_H
+
+#define BG_COLOR 0x282c34
+#define WHITE_COLOR 0xabb2bf
+#define GREEN_COLOR 0x98c379
+#define BLUE_COLOR 0x61afef
+#define RED_COLOR 0xe06c75
+#define YELLOW_COLOR 0xe5c07b
+#define PURPLE_COLOR 0xc678dd
+#define DIM_COLOR 0x5c6370
+#define GUTTER_COLOR 0x4b5263
+#define VERYDIM_COLOR 0x3b4048
+#define MENUBG_COLOR 0x3e4452
+#define HIGHLIGHTGREY_COLOR 0x2c323c
+
+#endif

@@ -45,10 +45,6 @@ static int term_init(void) {
 }
 
 static void term_cleanup(void) {
-	// leave alt screen
-#define LEAVE_ALT "\033[?1049l"
-	fwrite(LEAVE_ALT, 1, strlen(LEAVE_ALT), stdout);
-
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios);
 }
 
@@ -94,7 +90,7 @@ int main(int argc, char **argv) {
 
 	struct framebuf fb;
 	framebuf_init(&fb, term_width, term_height);
-	for (;;) {
+	while (!editor.should_exit) {
 		framebuf_reset(&fb, term_width, term_height);
 		editor_render(&editor, &fb, (struct rect) { .width = fb.width, .height = fb.height });
 		framebuf_display(&fb);
@@ -127,4 +123,11 @@ int main(int argc, char **argv) {
 		}
 	}
 	framebuf_put(&fb);
+
+
+	// leave alt screen. do this here instead of in term_cleanup(),
+	// otherwise err/errx messages won't be visible because they'll
+	// be printed on the alternate screen.
+#define LEAVE_ALT "\033[?1049l"
+	fwrite(LEAVE_ALT, 1, strlen(LEAVE_ALT), stdout);
 }

@@ -23,7 +23,7 @@ void mf_run_tests(void) {
 
 static struct termios original_termios;
 
-static int enable_rawmode(void) {
+static int term_init(void) {
 	struct termios t;
 
 	if (tcgetattr(STDIN_FILENO, &t))
@@ -37,10 +37,18 @@ static int enable_rawmode(void) {
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &t))
 		return -1;
 
+	// enter alt screen
+#define ENTER_ALT "\033[?1049h"
+	fwrite(ENTER_ALT, 1, strlen(ENTER_ALT), stdout);
+
 	return 0;
 }
 
-static void disable_rawmode(void) {
+static void term_cleanup(void) {
+	// leave alt screen
+#define LEAVE_ALT "\033[?1049l"
+	fwrite(LEAVE_ALT, 1, strlen(LEAVE_ALT), stdout);
+
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &original_termios);
 }
 
@@ -64,9 +72,9 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-	if (enable_rawmode())
+	if (term_init())
 		err(1, "enable raw mode");
-	if (atexit(disable_rawmode))
+	if (atexit(term_cleanup))
 		err(1, "atexit handler");
 
 	int iobufsize = 10000;

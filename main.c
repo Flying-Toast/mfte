@@ -1,4 +1,6 @@
 #include <err.h>
+#include <errno.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +33,6 @@ static int enable_rawmode(void) {
 
 	cfmakeraw(&t);
 	t.c_cc[VMIN] = 0;
-	t.c_cc[VTIME] = 1;
 
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &t))
 		return -1;
@@ -90,19 +91,30 @@ int main(int argc, char **argv) {
 		editor_render(&editor, &fb, (struct rect) { .width = fb.width, .height = fb.height });
 		framebuf_display(&fb);
 
-		for (;;) {
-			if (resized_flag) {
-				ws = get_term_size();
-				term_width = ws.ws_col;
-				term_height = ws.ws_row;
-				resized_flag = 0;
-				break;
+		struct pollfd pfd = { .fd = STDIN_FILENO, .events = POLLIN };
+		int pollret = poll(&pfd, 1, -1);
+		// Poll finished. There is either data available on stdin,
+		// or poll was interrupted by a signal.
+		if (pollret == -1) {
+			if (errno == EINTR) {
+				// poll was interrupted, likely by SIGWINCH. Handle resize:
+				if (resized_flag) {
+					ws = get_term_size();
+					term_width = ws.ws_col;
+					term_height = ws.ws_row;
+					resized_flag = 0;
+				}
+			} else {
+				// non-EINTR poll error
+				err(1, "poll");
 			}
-
+		} else {
+			// pollret != -1, so there is data for reading:
 			struct keyevt kevt;
 			if (input_try_get_keyevt(&kevt) == 0) {
 				editor_handle_keyevt(&editor, kevt);
-				break;
+			} else {
+				errx(1, "poll returned but no data read");
 			}
 		}
 	}

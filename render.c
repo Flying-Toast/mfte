@@ -112,18 +112,17 @@ void render_solid_color(struct framebuf *fb, struct rect area, uint32_t color) {
 	}
 }
 
-void render_string(struct framebuf *fb, struct rect area, char *str, struct style style) {
+void render_str(struct framebuf *fb, struct rect area, str_t str, struct style style) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
 		return;
 
-	int slen = strlen(str);
 	int stridx = 0;
 
-	for (int i = 0; i < MIN(area.width, slen); i++) {
+	for (int i = 0; i < MIN(area.width, str.len); i++) {
 		struct pixel *px = &fb->buf[area.y * fb->width + area.x + i];
 		px->style = style;
-		px->ch = str[stridx++];
+		px->ch = str.ptr[stridx++];
 	}
 }
 

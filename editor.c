@@ -14,22 +14,22 @@ static void render_statusline(struct editor *e, struct framebuf *fb, struct rect
 	render_solid_color(fb, area, LIGHTBG_COLOR);
 
 	uint32_t modebg;
-	char *modestr;
+	str_t modestr;
 	switch (e->mode) {
 	case MODE_NORMAL:
 		modebg = GREEN_COLOR;
-		modestr = " NORMAL ";
+		modestr = STR(" NORMAL ");
 		break;
 	case MODE_COMMAND:
 		modebg = GREEN_COLOR;
-		modestr = " COMMAND ";
+		modestr = STR(" COMMAND ");
 		break;
 	default:
 		errx(1, "mode switch unreachable (%d)", e->mode);
 	}
 
-	struct rect mode_area = { .x = area.x, .y = area.y, .width = strlen(modestr), .height = 1 };
-	render_string(fb, mode_area, modestr, (struct style) { .fg = BG_COLOR, .bg = modebg });
+	struct rect mode_area = { .x = area.x, .y = area.y, .width = modestr.len, .height = 1 };
+	render_str(fb, mode_area, modestr, (struct style) { .fg = BG_COLOR, .bg = modebg });
 }
 
 void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {

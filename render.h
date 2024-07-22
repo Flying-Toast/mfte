@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "mf_string.h"
 #include "style.h"
 
 struct style {
@@ -41,6 +42,6 @@ struct rect framebuf_intersect(struct framebuf *fb, struct rect area);
 int rect_empty(struct rect r);
 
 void render_solid_color(struct framebuf *fb, struct rect area, uint32_t color);
-void render_string(struct framebuf *fb, struct rect area, char *str, struct style style);
+void render_str(struct framebuf *fb, struct rect area, str_t str, struct style style);
 
 #endif

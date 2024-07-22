@@ -15,9 +15,11 @@
 #include <string.h>
 
 void render_run_tests(void);
+void mf_string_run_tests(void);
 
 void mf_run_tests(void) {
 	render_run_tests();
+	mf_string_run_tests();
 }
 #endif
 

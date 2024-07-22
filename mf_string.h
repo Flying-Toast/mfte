@@ -25,5 +25,6 @@ void string_pop_char(string_t *s);
 str_t string_as_str(string_t s);
 int str_eq(str_t a, str_t b);
 string_t str_to_string(str_t s);
+str_t str_slice_idx_to_eol(str_t s, size_t idx);
 
 #endif

@@ -144,6 +144,7 @@ static void rect_assert_eq(struct rect lhs, struct rect rhs) {
 		print_rect(lhs);
 		printf("rhs: ");
 		print_rect(rhs);
+		assert(0);
 	}
 }
 

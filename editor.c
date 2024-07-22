@@ -14,6 +14,26 @@ void editor_new(struct editor *e) {
 	pane_new(&e->foo);
 }
 
+static void render_flowed_text(struct framebuf *fb, struct rect area, str_t text) {
+	area = framebuf_intersect(fb, area);
+	if (rect_empty(area))
+		return;
+
+	size_t line_start_idx = 0;
+	for (int line_y = 0; line_y < area.height; line_y++) {
+		struct rect line_area = {
+			.x = area.x,
+			.y = area.y + line_y,
+			.width = area.width,
+			.height = 1,
+		};
+		struct style sty = { .fg = YELLOW_COLOR, .bg = PURPLE_COLOR };
+		str_t line = str_slice_idx_to_eol(text, line_start_idx);
+		line_start_idx += line.len + 1;
+		render_str(fb, line_area, line, sty);
+	}
+}
+
 static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
@@ -28,7 +48,7 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 		content_area.x += line_num_area.width;
 	}
 
-	render_solid_color(fb, content_area, BLUE_COLOR);
+	render_flowed_text(fb, content_area, string_as_str(p->content));
 }
 
 static void render_statusline(struct editor *e, struct framebuf *fb, struct rect area) {

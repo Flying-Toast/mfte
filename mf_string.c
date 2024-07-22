@@ -58,3 +58,36 @@ string_t str_to_string(str_t s) {
 	memcpy(ret.ptr, s.ptr, s.len);
 	return ret;
 }
+
+str_t str_slice_idx_to_eol(str_t s, size_t start_idx) {
+	str_t ret = { .len = 0, .ptr = s.ptr + start_idx };
+
+	while (start_idx + ret.len < s.len && s.ptr[start_idx + ret.len] != '\n') {
+		ret.len++;
+	}
+
+	return ret;
+}
+
+#ifdef MF_BUILD_TESTS
+#include <assert.h>
+#include <stdio.h>
+
+static void str_assert_eq(str_t lhs, str_t rhs) {
+	if (lhs.len != rhs.len || memcmp(lhs.ptr, rhs.ptr, lhs.len) != 0) {
+		printf("assertion `lhs == rhs` failed.\n");
+		printf("lhs: \"%.*s\"\nrhs: \"%.*s\"\n", (int) lhs.len, lhs.ptr, (int) rhs.len, rhs.ptr);
+		assert(0);
+	}
+}
+
+void mf_string_run_tests(void) {
+	str_t s = STR("Hello world\nsecond line\n");
+	str_assert_eq(str_slice_idx_to_eol(s, 0), STR("Hello world"));
+	str_assert_eq(str_slice_idx_to_eol(s, 2), STR("llo world"));
+	str_assert_eq(str_slice_idx_to_eol(s, 11), STR(""));
+	str_assert_eq(str_slice_idx_to_eol(s, 12), STR("second line"));
+
+	str_assert_eq(str_slice_idx_to_eol(STR(""), 123), STR(""));
+}
+#endif

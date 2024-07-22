@@ -23,6 +23,7 @@ struct editor {
 };
 
 void editor_new(struct editor *e);
+void editor_free(struct editor *e);
 void editor_render(struct editor *e, struct framebuf *fb, struct rect area);
 void editor_handle_keyevt(struct editor *e, struct keyevt evt);
 

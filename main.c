@@ -63,6 +63,11 @@ static void sigwinch_handler(int signo) {
 }
 
 int main(int argc, char **argv) {
+	int stdoutbufsize = 10000;
+	char *stdoutbuf = malloc(stdoutbufsize);
+	if (setvbuf(stdout, stdoutbuf, _IOFBF, stdoutbufsize))
+		err(1, "setvbuf");
+
 #ifdef MF_BUILD_TESTS
 	if (argc == 2 && !strcmp(argv[1], "--test")) {
 		mf_run_tests();
@@ -74,10 +79,6 @@ int main(int argc, char **argv) {
 		err(1, "enable raw mode");
 	if (atexit(term_cleanup))
 		err(1, "atexit handler");
-
-	int iobufsize = 10000;
-	if (setvbuf(stdout, malloc(iobufsize), _IOFBF, iobufsize))
-		err(1, "setvbuf");
 
 	struct winsize ws = get_term_size();
 	int term_width = ws.ws_col;
@@ -124,12 +125,16 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-	framebuf_put(&fb);
-
+	framebuf_free(&fb);
+	editor_free(&editor);
 
 	// leave alt screen. do this here instead of in term_cleanup(),
 	// otherwise err/errx messages won't be visible because they'll
 	// be printed on the alternate screen.
 #define LEAVE_ALT "\033[?1049l"
 	fwrite(LEAVE_ALT, 1, strlen(LEAVE_ALT), stdout);
+
+	fflush(stdout);
+	setvbuf(stdout, NULL, _IOFBF, 0);
+	free(stdoutbuf);
 }

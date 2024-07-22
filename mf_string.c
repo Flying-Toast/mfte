@@ -18,7 +18,8 @@ string_t string_new(void) {
 }
 
 void string_free(string_t s) {
-	free(s.ptr);
+	if (s.cap > 0)
+		free(s.ptr);
 }
 
 void string_push_char(string_t *s, char ch) {

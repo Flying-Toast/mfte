@@ -7,11 +7,20 @@ static void pane_new(struct pane *p) {
 	p->show_line_nums = 1;
 }
 
+static void pane_free(struct pane *p) {
+	string_free(p->content);
+}
+
 void editor_new(struct editor *e) {
 	e->mode = MODE_NORMAL;
 	e->commandline = string_new();
 	e->should_exit = 0;
 	pane_new(&e->foo);
+}
+
+void editor_free(struct editor *e) {
+	pane_free(&e->foo);
+	string_free(e->commandline);
 }
 
 static void render_flowed_text(struct framebuf *fb, struct rect area, str_t text) {

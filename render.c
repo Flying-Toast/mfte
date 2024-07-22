@@ -66,7 +66,7 @@ void framebuf_reset(struct framebuf *fb, int width, int height) {
 	}
 }
 
-void framebuf_put(struct framebuf *fb) {
+void framebuf_free(struct framebuf *fb) {
 	free(fb->buf);
 }
 

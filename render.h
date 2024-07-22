@@ -35,7 +35,7 @@ struct rect {
 void framebuf_display(struct framebuf *fb);
 void framebuf_reset(struct framebuf *fb, int width, int height);
 void framebuf_new(struct framebuf *fb, int width, int height);
-void framebuf_put(struct framebuf *fb);
+void framebuf_free(struct framebuf *fb);
 
 struct rect rect_intersect(struct rect a, struct rect b);
 struct rect framebuf_intersect(struct framebuf *fb, struct rect area);

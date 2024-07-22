@@ -1,5 +1,5 @@
 CC=clang
-OBJECTS=main.o render.o input.o
+OBJECTS=main.o render.o input.o editor.o
 CFLAGS=-Wall -DMF_BUILD_TESTS
 
 mf: $(OBJECTS)

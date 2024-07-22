@@ -1,6 +1,7 @@
 #ifndef __HAVE_FRAMEBUF_H
 #define __HAVE_FRAMEBUF_H
 
+#include <stddef.h>
 #include <stdint.h>
 #include "style.h"
 
@@ -34,6 +35,10 @@ void framebuf_display(struct framebuf *fb);
 void framebuf_reset(struct framebuf *fb, int width, int height);
 void framebuf_init(struct framebuf *fb, int width, int height);
 void framebuf_put(struct framebuf *fb);
+
+struct rect rect_intersect(struct rect a, struct rect b);
+struct rect framebuf_intersect(struct framebuf *fb, struct rect area);
+int rect_empty(struct rect r);
 
 void render_solid_color(struct framebuf *fb, struct rect area, uint32_t color);
 void render_string(struct framebuf *fb, struct rect area, char *str, struct style style);

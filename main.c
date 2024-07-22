@@ -5,6 +5,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+#include "editor.h"
 #include "render.h"
 #include "input.h"
 
@@ -79,12 +80,14 @@ int main(int argc, char **argv) {
 	if (sigaction(SIGWINCH, &winch_act, NULL))
 		err(1, "sigaction");
 
+	struct editor editor;
+	editor_init(&editor);
+
 	struct framebuf fb;
 	framebuf_init(&fb, term_width, term_height);
 	for (;;) {
 		framebuf_reset(&fb, term_width, term_height);
-		render_solid_color(&fb, (struct rect) { .x = 5, .y = 5, .width = 10, .height = 2 }, RED_COLOR);
-		render_string(&fb, (struct rect) { .x = 0, .y = 3, .width = 10, .height = 1 }, "Hello!", (struct style) { .bg = BG_COLOR, .fg = GREEN_COLOR });
+		editor_render(&editor, &fb, (struct rect) { .width = fb.width, .height = fb.height });
 		framebuf_display(&fb);
 
 		for (;;) {
@@ -98,7 +101,7 @@ int main(int argc, char **argv) {
 
 			struct keyevt kevt;
 			if (input_try_get_keyevt(&kevt) == 0) {
-				// editor_handle_keyevt(editor, kevt);
+				editor_handle_keyevt(&editor, kevt);
 				break;
 			}
 		}

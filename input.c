@@ -37,7 +37,7 @@ int input_try_get_keyevt(struct keyevt *ret) {
 			ret->kind = KEYKIND_ESCAPE;
 			return 0;
 		} else if (next != '[') {
-			errx(1, "got %d in escape code, expected '['", next);
+			errx(1, "got %d (%c) in escape code, expected '['", next, isprint(next) ? next : '-');
 		}
 
 		char seq[2];

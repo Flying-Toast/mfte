@@ -1,6 +1,12 @@
 #ifndef __HAVE_INPUT_H
 #define __HAVE_INPUT_H
 
+#define EVT_IS_CHAR(evt, ch) ({ \
+		struct keyevt __evt = evt; \
+		char __ch = ch; \
+		(__evt.kind == KEYKIND_CHAR && __evt.kchar == __ch); \
+	})
+
 enum keykind {
 	KEYKIND_ENTER,
 	KEYKIND_TAB,

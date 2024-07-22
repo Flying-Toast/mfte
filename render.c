@@ -70,7 +70,7 @@ void framebuf_put(struct framebuf *fb) {
 	free(fb->buf);
 }
 
-static struct rect rect_intersect(struct rect a, struct rect b) {
+struct rect rect_intersect(struct rect a, struct rect b) {
 	if (
 		a.x >= b.x + b.width
 		|| a.x + a.width <= b.x
@@ -89,12 +89,12 @@ static struct rect rect_intersect(struct rect a, struct rect b) {
 	return ret;
 }
 
-static struct rect framebuf_intersect(struct framebuf *fb, struct rect area) {
+struct rect framebuf_intersect(struct framebuf *fb, struct rect area) {
 	struct rect fb_rect = { .width = fb->width, .height = fb->height };
 	return rect_intersect(fb_rect, area);
 }
 
-static int rect_empty(struct rect r) {
+int rect_empty(struct rect r) {
 	return r.width <= 0 && r.height <= 0;
 }
 

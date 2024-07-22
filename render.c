@@ -44,7 +44,7 @@ void framebuf_display(struct framebuf *fb) {
 		err(1, "fflush");
 }
 
-void framebuf_init(struct framebuf *fb, int width, int height) {
+void framebuf_new(struct framebuf *fb, int width, int height) {
 	fb->width = width;
 	fb->height = height;
 	fb->buf = malloc(sizeof(fb->buf[0]) * width * height);

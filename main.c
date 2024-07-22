@@ -86,10 +86,10 @@ int main(int argc, char **argv) {
 		err(1, "sigaction");
 
 	struct editor editor;
-	editor_init(&editor);
+	editor_new(&editor);
 
 	struct framebuf fb;
-	framebuf_init(&fb, term_width, term_height);
+	framebuf_new(&fb, term_width, term_height);
 	while (!editor.should_exit) {
 		framebuf_reset(&fb, term_width, term_height);
 		editor_render(&editor, &fb, (struct rect) { .width = fb.width, .height = fb.height });

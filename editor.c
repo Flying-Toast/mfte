@@ -2,10 +2,33 @@
 #include <string.h>
 #include "editor.h"
 
-void editor_init(struct editor *e) {
+static void pane_new(struct pane *p) {
+	p->content = STRING("WOOOOHOOO hello there this is some text\nand it is in a pane :-)\nthis line is really jfaalew jfoiewaj oifjaweoijflaonge ong f jaewjf oiawejf oiajewoif jaoiewjf oiajewf043aj9f43aj09j 09j09");
+	p->show_line_nums = 1;
+}
+
+void editor_new(struct editor *e) {
 	e->mode = MODE_NORMAL;
 	e->commandline = string_new();
 	e->should_exit = 0;
+	pane_new(&e->foo);
+}
+
+static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
+	area = framebuf_intersect(fb, area);
+	if (rect_empty(area))
+		return;
+
+	struct rect line_num_area = { .x = area.x, .y = area.y };
+	struct rect content_area = area;
+	if (p->show_line_nums) {
+		line_num_area.height = area.height;
+		line_num_area.width = 4;
+		content_area.width -= line_num_area.width;
+		content_area.x += line_num_area.width;
+	}
+
+	render_solid_color(fb, content_area, BLUE_COLOR);
 }
 
 static void render_statusline(struct editor *e, struct framebuf *fb, struct rect area) {
@@ -60,6 +83,14 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 		cmd_area.width = e->commandline.len;
 		render_str(fb, cmd_area, string_as_str(e->commandline), cmd_style);
 	}
+
+	struct rect mainview_area = {
+		.x = area.x,
+		.y = area.y,
+		.width = area.width,
+		.height = area.height - (is_commandmode ? 2 : 1),
+	};
+	pane_render(&e->foo, fb, mainview_area);
 }
 
 static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt) {

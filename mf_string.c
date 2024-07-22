@@ -48,3 +48,13 @@ int str_eq(str_t a, str_t b) {
 
 	return memcmp(a.ptr, b.ptr, a.len) == 0;
 }
+
+string_t str_to_string(str_t s) {
+	string_t ret = {
+		.ptr = malloc(s.len),
+		.len = s.len,
+		.cap = s.len,
+	};
+	memcpy(ret.ptr, s.ptr, s.len);
+	return ret;
+}

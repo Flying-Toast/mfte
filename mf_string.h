@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #define STR(LIT) (str_t) { .ptr = "" LIT "", .len = sizeof("" LIT "") - 1 }
+#define STRING(LIT) str_to_string(STR(LIT))
 
 typedef struct {
 	const char *ptr;
@@ -23,5 +24,6 @@ void string_clear(string_t *s);
 void string_pop_char(string_t *s);
 str_t string_as_str(string_t s);
 int str_eq(str_t a, str_t b);
+string_t str_to_string(str_t s);
 
 #endif

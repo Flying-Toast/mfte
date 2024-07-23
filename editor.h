@@ -1,6 +1,7 @@
 #ifndef __HAVE_EDITOR_H
 #define __HAVE_EDITOR_H
 
+#include "bufline.h"
 #include "input.h"
 #include "mf_string.h"
 #include "render.h"
@@ -11,7 +12,7 @@ enum editor_mode {
 };
 
 struct pane {
-	string_t content;
+	struct bufline *first_line;
 	unsigned show_line_nums : 1;
 };
 

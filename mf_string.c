@@ -70,6 +70,10 @@ str_t str_slice_idx_to_eol(str_t s, size_t start_idx) {
 	return ret;
 }
 
+int str_is_empty(str_t s) {
+	return s.len == 0;
+}
+
 #ifdef MF_BUILD_TESTS
 #include <assert.h>
 #include <stdio.h>

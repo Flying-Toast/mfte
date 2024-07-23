@@ -3,13 +3,16 @@
 #include <string.h>
 #include "editor.h"
 
+static str_t commandline_prompt = STR(">> ");
+
 static void pane_new(struct pane *p) {
-	p->content = STRING("WOOOOHOOO hello there this is some text\nand it is in a pane :-)\nthis line is really jfaalew jfoiewaj oifjaweoijflaonge ong f jaewjf oiawejf oiajewoif jaoiewjf oiajewf043aj9f43aj09j 09j09");
+	string_t foo = STRING("WOOOOHOOO hello there this is some text\nand it is in a pane :-)\nthis line is really jfaalew jfoiewaj oifjaweoijflaonge ong f jaewjf oiawejf oiajewoif jaoiewjf oiajewf043aj9f43aj09j 09j09");
+	p->first_line = multiline_string_to_buflines(foo);
 	p->show_line_nums = 1;
 }
 
 static void pane_free(struct pane *p) {
-	string_free(p->content);
+	free_bufline_list(p->first_line);
 }
 
 void editor_new(struct editor *e) {
@@ -58,7 +61,15 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 		content_area.x += line_num_area.width;
 	}
 
-	render_flowed_text(fb, content_area, string_as_str(p->content));
+	struct rect line_area = content_area;
+	line_area.height = 1;
+	for (struct bufline *bl = p->first_line; bl != NULL; bl = bl->next) {
+		if (line_area.height > content_area.height)
+			break;
+
+		render_flowed_text(fb, line_area, string_as_str(bl->string));
+		line_area.y += 1;
+	}
 }
 
 static void render_statusline(struct editor *e, struct framebuf *fb, struct rect area) {
@@ -100,8 +111,7 @@ void editor_render_cursor(struct editor *e, struct rect editor_area) {
 		break;
 	case MODE_COMMAND:
 		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);
-		// 2 = strlen("> ")
-		cursorx = 2 + e->commandline.len;
+		cursorx = commandline_prompt.len + e->commandline.len;
 		cursory = editor_area.y + editor_area.height;
 		break;
 	}
@@ -129,12 +139,13 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 
 	// render commandline
 	if (is_commandmode) {
-		struct style cmd_style = { .fg = WHITE_COLOR, .bg = BG_COLOR };
-		struct rect cmd_area = { .x = area.x, .y = area.y + area.height - 1, .width = 2, .height = 1 };
-		render_str(fb, cmd_area, STR("> "), cmd_style);
-		cmd_area.x += 2;
+		struct rect cmd_area = { .x = area.x, .y = area.y + area.height - 1, .width = commandline_prompt.len, .height = 1 };
+		struct style style = { .fg = GUTTER_COLOR, .bg = BG_COLOR };
+		render_str(fb, cmd_area, commandline_prompt, style);
+		cmd_area.x += commandline_prompt.len;
 		cmd_area.width = e->commandline.len;
-		render_str(fb, cmd_area, string_as_str(e->commandline), cmd_style);
+		style.fg = WHITE_COLOR;
+		render_str(fb, cmd_area, string_as_str(e->commandline), style);
 	}
 
 	struct rect mainview_area = {

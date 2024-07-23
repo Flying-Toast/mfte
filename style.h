@@ -11,5 +11,6 @@
 
 #define LIGHTBG_COLOR 0x2c323c
 #define LIGHTERBG_COLOR 0x3e4452
+#define GUTTER_COLOR 0x4b5263
 
 #endif

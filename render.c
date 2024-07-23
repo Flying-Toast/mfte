@@ -7,8 +7,6 @@
 #define CLR_SCREEN "\033[2J"
 #define ZERO_CURSOR "\033[1;1H"
 #define RESET_FRAME CLR_SCREEN ZERO_CURSOR
-#define MIN(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; (__a) < (__b) ? (__a) : (__b); })
-#define MAX(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; (__a) > (__b) ? (__a) : (__b); })
 #define R_BYTE(color) (color >> 16)
 #define G_BYTE(color) ((color >> 8) & 0xFF)
 #define B_BYTE(color) (color & 0xFF)

@@ -11,8 +11,8 @@ static void pane_new(struct pane *p) {
 	p->cursor_line = str_to_buflines(foo);
 	p->cursor_line_idx = 0;
 	p->show_line_nums = 1;
-	p->cursor_x = 0;
-	p->cursor_y = 0;
+	p->stored_cursor_x = 0;
+	p->stored_cursor_y = 0;
 }
 
 static void pane_free(struct pane *p) {
@@ -71,8 +71,8 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 
 	struct rect line_area = content_area;
 	line_area.height = 1;
-	p->cursor_x = line_area.x + p->cursor_line_idx;
-	p->cursor_y = line_area.y;
+	p->stored_cursor_x = line_area.x + p->cursor_line_idx;
+	p->stored_cursor_y = line_area.y;
 
 	struct rect line_num_area = gutter_area;
 	line_num_area.height = 1;
@@ -114,8 +114,10 @@ static void render_statusline(struct editor *e, struct framebuf *fb, struct rect
 		modestyle = STATUSLINE_COMMAND_MODE_STYLE;
 		modestr = STR(" COMMAND ");
 		break;
-	default:
-		errx(1, "mode switch unreachable (%d)", e->mode);
+	case MODE_INSERT:
+		modestyle = STATUSLINE_INSERT_MODE_STYLE;
+		modestr = STR(" INSERT ");
+		break;
 	}
 
 	struct rect mode_area = { .x = area.x, .y = area.y, .width = modestr.len, .height = 1 };
@@ -129,8 +131,13 @@ void editor_render_cursor(struct editor *e, struct rect editor_area) {
 	switch (e->mode) {
 	case MODE_NORMAL:
 		fwrite(BLOCK_CURSOR_ESC, 1, strlen(BLOCK_CURSOR_ESC), stdout);
-		cursorx = e->foo.cursor_x;
-		cursory = e->foo.cursor_y;
+		cursorx = e->foo.stored_cursor_x;
+		cursory = e->foo.stored_cursor_y;
+		break;
+	case MODE_INSERT:
+		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);
+		cursorx = e->foo.stored_cursor_x;
+		cursory = e->foo.stored_cursor_y;
 		break;
 	case MODE_COMMAND:
 		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);
@@ -187,6 +194,28 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		e->mode = MODE_COMMAND;
 		return;
 	}
+
+	if (EVT_IS_CHAR(evt, 'i')) {
+		e->mode = MODE_INSERT;
+		return;
+	}
+
+	if (EVT_IS_CHAR(evt, '0')) {
+		e->foo.cursor_line_idx = 0;
+		return;
+	}
+
+	if (EVT_IS_CHAR(evt, 'a')) {
+		e->foo.cursor_line_idx = MIN(e->foo.cursor_line->string.len, e->foo.cursor_line_idx + 1);
+		e->mode = MODE_INSERT;
+		return;
+	}
+
+	if (EVT_IS_CHAR(evt, 'A')) {
+		e->foo.cursor_line_idx = e->foo.cursor_line->string.len;
+		e->mode = MODE_INSERT;
+		return;
+	}
 }
 
 static void editor_eval_commandline(struct editor *e, str_t cmd) {
@@ -200,6 +229,14 @@ static void editor_eval_commandline(struct editor *e, str_t cmd) {
 	assert(strlen(errmsg) < sizeof(errmsg));
 	string_free(e->errormsg);
 	e->errormsg = str_to_string((str_t) { .ptr = errmsg, .len = strlen(errmsg) });
+}
+
+static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt) {
+	if (evt.kind == KEYKIND_ESCAPE) {
+		e->foo.cursor_line_idx = e->foo.cursor_line_idx > 0 ? e->foo.cursor_line_idx - 1 : 0;
+		e->mode = MODE_NORMAL;
+		return;
+	}
 }
 
 static void editor_handle_command_mode_keyevt(struct editor *e, struct keyevt evt) {
@@ -230,7 +267,8 @@ void editor_handle_keyevt(struct editor *e, struct keyevt evt) {
 	case MODE_COMMAND:
 		editor_handle_command_mode_keyevt(e, evt);
 		break;
-	default:
-		errx(1, "mode switch unreachable (%d)", e->mode);
+	case MODE_INSERT:
+		editor_handle_insert_mode_keyevt(e, evt);
+		break;
 	}
 }

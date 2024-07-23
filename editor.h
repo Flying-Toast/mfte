@@ -9,6 +9,7 @@
 enum editor_mode {
 	MODE_NORMAL,
 	MODE_COMMAND,
+	MODE_INSERT,
 };
 
 struct pane {
@@ -17,10 +18,10 @@ struct pane {
 	// index into `cursor_line->string` of the cursor
 	size_t cursor_line_idx;
 	unsigned show_line_nums : 1;
-	// x coord to render cursor at
-	int cursor_x;
+	// x coord to render cursor at. Stored in render_pane() for use in render_cursor()
+	int stored_cursor_x;
 	// y coord to render cursor at
-	int cursor_y;
+	int stored_cursor_y;
 };
 
 struct editor {

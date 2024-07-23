@@ -76,9 +76,16 @@ int str_is_empty(str_t s) {
 }
 
 void string_insert(string_t *s, size_t idx, char ch) {
-	assert(idx < s->len);
+	assert(idx <= s->len);
 
 	string_reserve(s, s->len + 1);
+
+	if (idx == s->len) {
+		s->ptr[idx] = ch;
+		s->len += 1;
+		return;
+	}
+
 	memmove(s->ptr + idx + 1, s->ptr + idx, s->len - idx);
 	s->len += 1;
 	s->ptr[idx] = ch;

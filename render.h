@@ -6,9 +6,6 @@
 #include "mf_string.h"
 #include "style.h"
 
-#define BAR_CURSOR_ESC "\033[6 q"
-#define BLOCK_CURSOR_ESC "\033[2 q"
-
 #define MIN(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; (__a) < (__b) ? (__a) : (__b); })
 #define MAX(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; (__a) > (__b) ? (__a) : (__b); })
 
@@ -22,11 +19,19 @@ struct pixel {
 	struct style style;
 };
 
+enum cursor_style {
+	CURSOR_BLOCK,
+	CURSOR_BAR,
+};
+
 struct framebuf {
 	int width;
 	int height;
 	struct pixel *buf;
 	size_t bufcap;
+	int cursorx;
+	int cursory;
+	enum cursor_style cursor_style;
 };
 
 struct rect {
@@ -49,5 +54,6 @@ int rect_empty(struct rect r);
 
 void render_solid_color(struct framebuf *fb, struct rect area, uint32_t color);
 void render_str(struct framebuf *fb, struct rect area, str_t str, struct style style);
+void render_restore_cursor_style(void);
 
 #endif

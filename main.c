@@ -98,7 +98,6 @@ int main(int argc, char **argv) {
 		struct rect editor_area = { .width = fb.width, .height = fb.height };
 		editor_render(&editor, &fb, editor_area);
 		framebuf_display(&fb);
-		editor_render_cursor(&editor, editor_area);
 
 		if (fflush(stdout))
 			err(1, "fflush");
@@ -138,8 +137,7 @@ int main(int argc, char **argv) {
 	// be printed on the alternate screen.
 #define LEAVE_ALT "\033[?1049l"
 	fwrite(LEAVE_ALT, 1, strlen(LEAVE_ALT), stdout);
-	// restore cursor style
-	fwrite(BLOCK_CURSOR_ESC, 1, strlen(BLOCK_CURSOR_ESC), stdout);
+	render_restore_cursor_style();
 
 	fflush(stdout);
 	setvbuf(stdout, NULL, _IOFBF, 0);

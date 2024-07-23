@@ -11,8 +11,6 @@ static void pane_new(struct pane *p) {
 	p->cursor_line = str_to_buflines(foo);
 	p->cursor_line_idx = 0;
 	p->show_line_nums = 1;
-	p->stored_cursor_x = 0;
-	p->stored_cursor_y = 0;
 }
 
 static void pane_free(struct pane *p) {
@@ -55,6 +53,25 @@ static void render_flowed_text(struct framebuf *fb, struct rect area, str_t text
 	}
 }
 
+static void editor_render_cursor(struct editor *e, struct framebuf *fb, struct rect editor_area) {
+	switch (e->mode) {
+	case MODE_NORMAL:
+		// cursorx/cursory set in pane_render()
+		fb->cursor_style = CURSOR_BLOCK;
+		break;
+	case MODE_INSERT:
+		// cursorx/cursory set in pane_render()
+		fb->cursor_style = CURSOR_BAR;
+		break;
+	case MODE_COMMAND:
+		fb->cursor_style = CURSOR_BAR;
+		fb->cursorx = commandline_prompt.len + e->commandline.len;
+		fb->cursory = editor_area.y + editor_area.height;
+		break;
+	}
+
+}
+
 static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
@@ -71,8 +88,8 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 
 	struct rect line_area = content_area;
 	line_area.height = 1;
-	p->stored_cursor_x = line_area.x + p->cursor_line_idx;
-	p->stored_cursor_y = line_area.y;
+	fb->cursorx = line_area.x + p->cursor_line_idx;
+	fb->cursory = line_area.y;
 
 	struct rect line_num_area = gutter_area;
 	line_num_area.height = 1;
@@ -124,33 +141,6 @@ static void render_statusline(struct editor *e, struct framebuf *fb, struct rect
 	render_str(fb, mode_area, modestr, modestyle);
 }
 
-void editor_render_cursor(struct editor *e, struct rect editor_area) {
-	int cursorx;
-	int cursory;
-
-	switch (e->mode) {
-	case MODE_NORMAL:
-		fwrite(BLOCK_CURSOR_ESC, 1, strlen(BLOCK_CURSOR_ESC), stdout);
-		cursorx = e->foo.stored_cursor_x;
-		cursory = e->foo.stored_cursor_y;
-		break;
-	case MODE_INSERT:
-		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);
-		cursorx = e->foo.stored_cursor_x;
-		cursory = e->foo.stored_cursor_y;
-		break;
-	case MODE_COMMAND:
-		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);
-		cursorx = commandline_prompt.len + e->commandline.len;
-		cursory = editor_area.y + editor_area.height;
-		break;
-	}
-
-	char moveesc[sizeof("\033[XXX;XXXH") - 1] = "";
-	sprintf(moveesc, "\033[%d;%dH", cursory + 1, cursorx + 1);
-	fwrite(moveesc, 1, strlen(moveesc), stdout);
-}
-
 void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
@@ -185,6 +175,12 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 		.height = area.height - (commandline_line_used ? 2 : 1),
 	};
 	pane_render(&e->foo, fb, mainview_area);
+
+	// render cursor last, because pane_render() can set cursorx/cursory for e.g. normal mode.
+	// it doesn't matter that the cursor gets moved during rendering; fb->cursor(x|y) just stores
+	// the position and then actually moves the cursor as the final step of rendering in
+	// framebuf_display().
+	editor_render_cursor(e, fb, area);
 }
 
 static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt) {
@@ -231,7 +227,11 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		struct pane *curp = &e->foo;
 		if (curp->cursor_line->next != NULL) {
 			curp->cursor_line = curp->cursor_line->next;
-			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len);
+			if (curp->cursor_line->string.len == 0) {
+				curp->cursor_line_idx = 0;
+			} else {
+				curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
+			}
 		}
 		return;
 	}
@@ -240,7 +240,11 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		struct pane *curp = &e->foo;
 		if (curp->cursor_line->prev != NULL) {
 			curp->cursor_line = curp->cursor_line->prev;
-			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len);
+			if (curp->cursor_line->string.len == 0) {
+				curp->cursor_line_idx = 0;
+			} else {
+				curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
+			}
 		}
 		return;
 	}

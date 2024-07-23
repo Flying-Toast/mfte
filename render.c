@@ -6,6 +6,8 @@
 
 #define CLR_SCREEN "\033[2J"
 #define ZERO_CURSOR "\033[1;1H"
+#define BAR_CURSOR_ESC "\033[6 q"
+#define BLOCK_CURSOR_ESC "\033[2 q"
 #define RESET_FRAME CLR_SCREEN ZERO_CURSOR
 #define R_BYTE(color) (color >> 16)
 #define G_BYTE(color) ((color >> 8) & 0xFF)
@@ -37,6 +39,18 @@ void framebuf_display(struct framebuf *fb) {
 			prevpx = pixel;
 		}
 	}
+
+	switch (fb->cursor_style) {
+	case CURSOR_BLOCK:
+		fwrite(BLOCK_CURSOR_ESC, 1, strlen(BLOCK_CURSOR_ESC), stdout);
+		break;
+	case CURSOR_BAR:
+		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);
+		break;
+	}
+	char moveesc[sizeof("\033[XXX;XXXH") - 1] = "";
+	sprintf(moveesc, "\033[%d;%dH", fb->cursory + 1, fb->cursorx + 1);
+	fwrite(moveesc, 1, strlen(moveesc), stdout);
 }
 
 void framebuf_new(struct framebuf *fb, int width, int height) {
@@ -44,6 +58,8 @@ void framebuf_new(struct framebuf *fb, int width, int height) {
 	fb->height = height;
 	fb->buf = malloc(sizeof(fb->buf[0]) * width * height);
 	fb->bufcap = width * height;
+	fb->cursorx = 0;
+	fb->cursory = 0;
 }
 
 void framebuf_reset(struct framebuf *fb, int width, int height) {
@@ -87,6 +103,10 @@ struct rect rect_intersect(struct rect a, struct rect b) {
 struct rect framebuf_intersect(struct framebuf *fb, struct rect area) {
 	struct rect fb_rect = { .width = fb->width, .height = fb->height };
 	return rect_intersect(fb_rect, area);
+}
+
+void render_restore_cursor_style(void) {
+	fwrite(BLOCK_CURSOR_ESC, 1, strlen(BLOCK_CURSOR_ESC), stdout);
 }
 
 int rect_empty(struct rect r) {

@@ -24,7 +24,7 @@ struct editor {
 	enum editor_mode mode;
 	string_t commandline;
 	unsigned should_exit : 1;
-	struct pane foo;
+	struct pane foobar123lol; // temporary :-)
 	string_t errormsg;
 };
 

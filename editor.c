@@ -12,6 +12,10 @@ static void pane_new(struct pane *p, str_t initial_contents) {
 	p->show_line_nums = 1;
 }
 
+static struct pane *editor_get_focused_pane(struct editor *e) {
+	return &e->foobar123lol;
+}
+
 static void pane_free(struct pane *p) {
 	struct bufline *first_line;
 	for (first_line = p->cursor_line; first_line->prev; first_line = first_line->prev)
@@ -24,11 +28,11 @@ void editor_new(struct editor *e, str_t initial_contents) {
 	e->commandline = string_new();
 	e->errormsg = string_new();
 	e->should_exit = 0;
-	pane_new(&e->foo, initial_contents);
+	pane_new(&e->foobar123lol, initial_contents);
 }
 
 void editor_free(struct editor *e) {
-	pane_free(&e->foo);
+	pane_free(&e->foobar123lol);
 	string_free(e->commandline);
 	string_free(e->errormsg);
 }
@@ -177,7 +181,7 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 		.width = area.width,
 		.height = area.height - (commandline_line_used ? 2 : 1),
 	};
-	pane_render(&e->foo, fb, mainview_area);
+	pane_render(&e->foobar123lol, fb, mainview_area);
 
 	// render cursor last, because pane_render() can set cursorx/cursory for e.g. normal mode.
 	// it doesn't matter that the cursor gets moved during rendering; fb->cursor(x|y) just stores
@@ -187,6 +191,8 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 }
 
 static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt) {
+	struct pane *curp = editor_get_focused_pane(e);
+
 	if (EVT_IS_CHAR(evt, ' ')) {
 		string_clear(&e->commandline);
 		string_clear(&e->errormsg);
@@ -200,8 +206,6 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (EVT_IS_CHAR(evt, 'x')) {
-		struct pane *curp = &e->foo;
-
 		if (curp->cursor_line->string.len == 0)
 			return;
 
@@ -211,23 +215,22 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (EVT_IS_CHAR(evt, '0')) {
-		e->foo.cursor_line_idx = 0;
+		curp->cursor_line_idx = 0;
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'a')) {
-		e->foo.cursor_line_idx = MIN(e->foo.cursor_line->string.len, e->foo.cursor_line_idx + 1);
+		curp->cursor_line_idx = MIN(curp->cursor_line->string.len, curp->cursor_line_idx + 1);
 		e->mode = MODE_INSERT;
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'h')) {
-		e->foo.cursor_line_idx = e->foo.cursor_line_idx > 0 ? e->foo.cursor_line_idx - 1 : 0;
+		curp->cursor_line_idx = curp->cursor_line_idx > 0 ? curp->cursor_line_idx - 1 : 0;
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'j')) {
-		struct pane *curp = &e->foo;
 		if (curp->cursor_line->next != NULL) {
 			curp->cursor_line = curp->cursor_line->next;
 			if (curp->cursor_line->string.len == 0) {
@@ -240,7 +243,6 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (EVT_IS_CHAR(evt, 'k')) {
-		struct pane *curp = &e->foo;
 		if (curp->cursor_line->prev != NULL) {
 			curp->cursor_line = curp->cursor_line->prev;
 			if (curp->cursor_line->string.len == 0) {
@@ -253,12 +255,12 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (EVT_IS_CHAR(evt, 'l')) {
-		e->foo.cursor_line_idx = MIN(e->foo.cursor_line->string.len - 1, e->foo.cursor_line_idx + 1);
+		curp->cursor_line_idx = MIN(curp->cursor_line->string.len - 1, curp->cursor_line_idx + 1);
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'A')) {
-		e->foo.cursor_line_idx = e->foo.cursor_line->string.len;
+		curp->cursor_line_idx = curp->cursor_line->string.len;
 		e->mode = MODE_INSERT;
 		return;
 	}
@@ -278,22 +280,21 @@ static void editor_eval_commandline(struct editor *e, str_t cmd) {
 }
 
 static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt) {
+	struct pane *curp = editor_get_focused_pane(e);
+
 	if (evt.kind == KEYKIND_ESCAPE) {
-		e->foo.cursor_line_idx = e->foo.cursor_line_idx > 0 ? e->foo.cursor_line_idx - 1 : 0;
+		curp->cursor_line_idx = curp->cursor_line_idx > 0 ? curp->cursor_line_idx - 1 : 0;
 		e->mode = MODE_NORMAL;
 		return;
 	}
 
 	if (evt.kind == KEYKIND_CHAR) {
-		struct pane *curp = &e->foo;
 		string_insert(&curp->cursor_line->string, curp->cursor_line_idx, evt.kchar);
 		curp->cursor_line_idx += 1;
 		return;
 	}
 
 	if (evt.kind == KEYKIND_DELETE) {
-		struct pane *curp = &e->foo;
-
 		if (curp->cursor_line_idx == curp->cursor_line->string.len)
 			return;
 
@@ -302,8 +303,6 @@ static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (evt.kind == KEYKIND_BACKSPACE) {
-		struct pane *curp = &e->foo;
-
 		if (curp->cursor_line_idx == 0)
 			return;
 

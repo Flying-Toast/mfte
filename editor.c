@@ -211,6 +211,34 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		return;
 	}
 
+	if (EVT_IS_CHAR(evt, 'h')) {
+		e->foo.cursor_line_idx = e->foo.cursor_line_idx > 0 ? e->foo.cursor_line_idx - 1 : 0;
+		return;
+	}
+
+	if (EVT_IS_CHAR(evt, 'j')) {
+		struct pane *curp = &e->foo;
+		if (curp->cursor_line->next != NULL) {
+			curp->cursor_line = curp->cursor_line->next;
+			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
+		}
+		return;
+	}
+
+	if (EVT_IS_CHAR(evt, 'k')) {
+		struct pane *curp = &e->foo;
+		if (curp->cursor_line->prev != NULL) {
+			curp->cursor_line = curp->cursor_line->prev;
+			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
+		}
+		return;
+	}
+
+	if (EVT_IS_CHAR(evt, 'l')) {
+		e->foo.cursor_line_idx = MIN(e->foo.cursor_line->string.len - 1, e->foo.cursor_line_idx + 1);
+		return;
+	}
+
 	if (EVT_IS_CHAR(evt, 'A')) {
 		e->foo.cursor_line_idx = e->foo.cursor_line->string.len;
 		e->mode = MODE_INSERT;

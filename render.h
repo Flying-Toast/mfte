@@ -6,6 +6,9 @@
 #include "mf_string.h"
 #include "style.h"
 
+#define BAR_CURSOR_ESC "\033[6 q"
+#define BLOCK_CURSOR_ESC "\033[2 q"
+
 struct style {
 	uint32_t fg;
 	uint32_t bg;

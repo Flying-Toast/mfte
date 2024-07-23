@@ -39,9 +39,6 @@ void framebuf_display(struct framebuf *fb) {
 			prevpx = pixel;
 		}
 	}
-
-	if (fflush(stdout))
-		err(1, "fflush");
 }
 
 void framebuf_new(struct framebuf *fb, int width, int height) {

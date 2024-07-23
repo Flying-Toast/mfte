@@ -1,4 +1,5 @@
 #include <err.h>
+#include <stdio.h>
 #include <string.h>
 #include "editor.h"
 
@@ -85,6 +86,29 @@ static void render_statusline(struct editor *e, struct framebuf *fb, struct rect
 
 	struct rect mode_area = { .x = area.x, .y = area.y, .width = modestr.len, .height = 1 };
 	render_str(fb, mode_area, modestr, modestyle);
+}
+
+void editor_render_cursor(struct editor *e, struct rect editor_area) {
+	int cursorx;
+	int cursory;
+
+	switch (e->mode) {
+	case MODE_NORMAL:
+		fwrite(BLOCK_CURSOR_ESC, 1, strlen(BLOCK_CURSOR_ESC), stdout);
+		cursorx = 10;
+		cursory = 10;
+		break;
+	case MODE_COMMAND:
+		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);
+		// 2 = strlen("> ")
+		cursorx = 2 + e->commandline.len;
+		cursory = editor_area.y + editor_area.height;
+		break;
+	}
+
+	char moveesc[sizeof("\033[XXX;XXXH") - 1] = "";
+	sprintf(moveesc, "\033[%d;%dH", cursory + 1, cursorx + 1);
+	fwrite(moveesc, 1, strlen(moveesc), stdout);
 }
 
 void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {

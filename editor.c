@@ -95,7 +95,7 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 
 	size_t cur_line_no = 1;
 	for (struct bufline *bl = p->cursor_line; bl != NULL; bl = bl->next) {
-		if (line_area.height > content_area.height)
+		if (line_area.y >= content_area.height)
 			break;
 
 		char linenum[10];
@@ -156,8 +156,12 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 	};
 	render_statusline(e, fb, statusline_area);
 
-	// render commandline
-	struct rect cmdline_area = { .x = area.x, .y = area.y + area.height - 1, .width = area.width, .height = 1 };
+	struct rect cmdline_area = {
+		.x = area.x,
+		.y = area.y + area.height - 1,
+		.width = area.width,
+		.height = 1
+	};
 	if (e->mode == MODE_COMMAND) {
 		render_str(fb, cmdline_area, commandline_prompt, GUTTER_STYLE);
 		cmdline_area.x += commandline_prompt.len;

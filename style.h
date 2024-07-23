@@ -1,6 +1,8 @@
 #ifndef __HAVE_STYLE_H
 #define __HAVE_STYLE_H
 
+#include "render.h"
+
 #define BG_COLOR 0x282c34
 #define WHITE_COLOR 0xabb2bf
 #define GREEN_COLOR 0x98c379
@@ -12,5 +14,8 @@
 #define LIGHTBG_COLOR 0x2c323c
 #define LIGHTERBG_COLOR 0x3e4452
 #define GUTTER_COLOR 0x4b5263
+
+#define GUTTER_STYLE ((struct style) { .fg = GUTTER_COLOR, .bg = BG_COLOR })
+#define NORMAL_STYLE ((struct style) { .fg = WHITE_COLOR, .bg = BG_COLOR })
 
 #endif

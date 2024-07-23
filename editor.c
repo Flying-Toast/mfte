@@ -27,7 +27,7 @@ void editor_free(struct editor *e) {
 	string_free(e->commandline);
 }
 
-static void render_flowed_text(struct framebuf *fb, struct rect area, str_t text) {
+static void render_flowed_text(struct framebuf *fb, struct rect area, str_t text, struct style sty) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
 		return;
@@ -40,7 +40,6 @@ static void render_flowed_text(struct framebuf *fb, struct rect area, str_t text
 			.width = area.width,
 			.height = 1,
 		};
-		struct style sty = { .fg = YELLOW_COLOR, .bg = PURPLE_COLOR };
 		str_t line = str_slice_idx_to_eol(text, line_start_idx);
 		line_start_idx += line.len + 1;
 		render_str(fb, line_area, line, sty);
@@ -52,22 +51,34 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 	if (rect_empty(area))
 		return;
 
-	struct rect line_num_area = { .x = area.x, .y = area.y };
+	struct rect gutter_area = { .x = area.x, .y = area.y };
 	struct rect content_area = area;
 	if (p->show_line_nums) {
-		line_num_area.height = area.height;
-		line_num_area.width = 4;
-		content_area.width -= line_num_area.width;
-		content_area.x += line_num_area.width;
+		gutter_area.height = area.height;
+		gutter_area.width = 4;
+		content_area.width -= gutter_area.width;
+		content_area.x += gutter_area.width;
 	}
 
 	struct rect line_area = content_area;
 	line_area.height = 1;
+	struct rect line_num_area = gutter_area;
+	line_num_area.height = 1;
+
+	size_t cur_line_no = 1;
 	for (struct bufline *bl = p->first_line; bl != NULL; bl = bl->next) {
 		if (line_area.height > content_area.height)
 			break;
 
-		render_flowed_text(fb, line_area, string_as_str(bl->string));
+		char linenum[10];
+		sprintf(linenum, "%3zu ", cur_line_no);
+		cur_line_no++;
+
+		str_t linenum_str = { .ptr = linenum, .len = strlen(linenum) };
+		render_flowed_text(fb, line_num_area, linenum_str, GUTTER_STYLE);
+		line_num_area.y += 1;
+
+		render_flowed_text(fb, line_area, string_as_str(bl->string), NORMAL_STYLE);
 		line_area.y += 1;
 	}
 }

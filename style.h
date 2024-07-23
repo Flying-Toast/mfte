@@ -17,5 +17,7 @@
 
 #define GUTTER_STYLE ((struct style) { .fg = GUTTER_COLOR, .bg = BG_COLOR })
 #define NORMAL_STYLE ((struct style) { .fg = WHITE_COLOR, .bg = BG_COLOR })
+#define STATUSLINE_NORMAL_MODE_STYLE ((struct style) { .fg = BG_COLOR, .bg = GREEN_COLOR })
+#define STATUSLINE_COMMAND_MODE_STYLE ((struct style) { .fg = BG_COLOR, .bg = GREEN_COLOR })
 
 #endif

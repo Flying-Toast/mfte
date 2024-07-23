@@ -90,16 +90,16 @@ static void render_statusline(struct editor *e, struct framebuf *fb, struct rect
 
 	render_solid_color(fb, area, LIGHTBG_COLOR);
 
-	struct style modestyle = { .fg = BG_COLOR };
+	struct style modestyle;
 	str_t modestr;
 
 	switch (e->mode) {
 	case MODE_NORMAL:
-		modestyle.bg = GREEN_COLOR;
+		modestyle = STATUSLINE_NORMAL_MODE_STYLE;
 		modestr = STR(" NORMAL ");
 		break;
 	case MODE_COMMAND:
-		modestyle.bg = GREEN_COLOR;
+		modestyle = STATUSLINE_COMMAND_MODE_STYLE;
 		modestr = STR(" COMMAND ");
 		break;
 	default:
@@ -151,12 +151,10 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 	// render commandline
 	if (is_commandmode) {
 		struct rect cmd_area = { .x = area.x, .y = area.y + area.height - 1, .width = commandline_prompt.len, .height = 1 };
-		struct style style = { .fg = GUTTER_COLOR, .bg = BG_COLOR };
-		render_str(fb, cmd_area, commandline_prompt, style);
+		render_str(fb, cmd_area, commandline_prompt, GUTTER_STYLE);
 		cmd_area.x += commandline_prompt.len;
 		cmd_area.width = e->commandline.len;
-		style.fg = WHITE_COLOR;
-		render_str(fb, cmd_area, string_as_str(e->commandline), style);
+		render_str(fb, cmd_area, string_as_str(e->commandline), NORMAL_STYLE);
 	}
 
 	struct rect mainview_area = {

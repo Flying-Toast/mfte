@@ -8,12 +8,18 @@ static str_t commandline_prompt = STR(">> ");
 
 static void pane_new(struct pane *p) {
 	str_t foo = STR("WOOOOHOOO hello there this is some text\nand it is in a pane :-)\nthis line is really jfaalew jfoiewaj oifjaweoijflaonge ong f jaewjf oiawejf oiajewoif jaoiewjf oiajewf043aj9f43aj09j 09j09");
-	p->first_line = multiline_str_to_buflines(foo);
+	p->cursor_line = str_to_buflines(foo);
+	p->cursor_line_idx = 0;
 	p->show_line_nums = 1;
+	p->cursor_x = 0;
+	p->cursor_y = 0;
 }
 
 static void pane_free(struct pane *p) {
-	free_bufline_list(p->first_line);
+	struct bufline *first_line;
+	for (first_line = p->cursor_line; first_line && first_line->prev; first_line = first_line->prev)
+		;
+	free_bufline_list(first_line);
 }
 
 void editor_new(struct editor *e) {
@@ -65,11 +71,14 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 
 	struct rect line_area = content_area;
 	line_area.height = 1;
+	p->cursor_x = line_area.x + p->cursor_line_idx;
+	p->cursor_y = line_area.y;
+
 	struct rect line_num_area = gutter_area;
 	line_num_area.height = 1;
 
 	size_t cur_line_no = 1;
-	for (struct bufline *bl = p->first_line; bl != NULL; bl = bl->next) {
+	for (struct bufline *bl = p->cursor_line; bl != NULL; bl = bl->next) {
 		if (line_area.height > content_area.height)
 			break;
 
@@ -120,8 +129,8 @@ void editor_render_cursor(struct editor *e, struct rect editor_area) {
 	switch (e->mode) {
 	case MODE_NORMAL:
 		fwrite(BLOCK_CURSOR_ESC, 1, strlen(BLOCK_CURSOR_ESC), stdout);
-		cursorx = 10;
-		cursory = 10;
+		cursorx = e->foo.cursor_x;
+		cursory = e->foo.cursor_y;
 		break;
 	case MODE_COMMAND:
 		fwrite(BAR_CURSOR_ESC, 1, strlen(BAR_CURSOR_ESC), stdout);

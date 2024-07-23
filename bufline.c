@@ -23,7 +23,7 @@ void free_bufline_list(struct bufline *head) {
 	}
 }
 
-struct bufline *multiline_str_to_buflines(str_t s) {
+struct bufline *str_to_buflines(str_t s) {
 	if (str_is_empty(s))
 		return NULL;
 

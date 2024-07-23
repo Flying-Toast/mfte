@@ -12,7 +12,7 @@ struct bufline {
 
 struct bufline *bufline_new_with_string(string_t s);
 void bufline_free(struct bufline *bl);
-struct bufline *multiline_str_to_buflines(str_t s);
+struct bufline *str_to_buflines(str_t s);
 void free_bufline_list(struct bufline *head);
 
 #endif

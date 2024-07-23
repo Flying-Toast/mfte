@@ -12,8 +12,15 @@ enum editor_mode {
 };
 
 struct pane {
-	struct bufline *first_line;
+	// line the cursor is on
+	struct bufline *cursor_line;
+	// index into `cursor_line->string` of the cursor
+	size_t cursor_line_idx;
 	unsigned show_line_nums : 1;
+	// x coord to render cursor at
+	int cursor_x;
+	// y coord to render cursor at
+	int cursor_y;
 };
 
 struct editor {

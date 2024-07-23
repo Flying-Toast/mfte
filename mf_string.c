@@ -1,19 +1,26 @@
 #include <assert.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "mf_string.h"
 
 static void string_reserve(string_t *s, size_t cap) {
 	if (s->cap >= cap)
 		return;
-	s->ptr = realloc(s->ptr, cap);
+	if (s->ptr == NULL) {
+		s->ptr = malloc(cap);
+	} else {
+		s->ptr = realloc(s->ptr, cap);
+	}
 	s->cap = cap;
 }
 
 string_t string_new(void) {
 	return (string_t) {
-		.cap = 1,
-		.ptr = malloc(1),
+		.cap = 0,
+		.ptr = NULL,
 		.len = 0,
 	};
 }
@@ -101,6 +108,23 @@ void string_remove(string_t *s, size_t idx) {
 
 	memmove(s->ptr + idx, s->ptr + idx + 1, s->len - idx);
 	s->len -= 1;
+}
+
+int read_file_to_string(char *path, string_t *s) {
+	struct stat st;
+	if (stat(path, &st) == -1)
+		return -1;
+
+	int fd = open(path, O_RDONLY);
+	if (fd == -1)
+		return -1;
+	string_reserve(s, st.st_size);
+	size_t nread;
+	if ((nread = read(fd, s->ptr, st.st_size)) == -1)
+		return -1;
+	s->len = nread;
+	close(fd);
+	return 0;
 }
 
 #ifdef MF_BUILD_TESTS

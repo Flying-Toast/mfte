@@ -6,26 +6,25 @@
 
 static str_t commandline_prompt = STR(">> ");
 
-static void pane_new(struct pane *p) {
-	str_t foo = STR("WOOOOHOOO hello there this is some text\nand it is in a pane :-)\nthis line is really jfaalew jfoiewaj oifjaweoijflaonge ong f jaewjf oiawejf oiajewoif jaoiewjf oiajewf043aj9f43aj09j 09j09");
-	p->cursor_line = str_to_buflines(foo);
+static void pane_new(struct pane *p, str_t initial_contents) {
+	p->cursor_line = str_to_buflines(initial_contents);
 	p->cursor_line_idx = 0;
 	p->show_line_nums = 1;
 }
 
 static void pane_free(struct pane *p) {
 	struct bufline *first_line;
-	for (first_line = p->cursor_line; first_line && first_line->prev; first_line = first_line->prev)
+	for (first_line = p->cursor_line; first_line->prev; first_line = first_line->prev)
 		;
 	free_bufline_list(first_line);
 }
 
-void editor_new(struct editor *e) {
+void editor_new(struct editor *e, str_t initial_contents) {
 	e->mode = MODE_NORMAL;
 	e->commandline = string_new();
 	e->errormsg = string_new();
 	e->should_exit = 0;
-	pane_new(&e->foo);
+	pane_new(&e->foo, initial_contents);
 }
 
 void editor_free(struct editor *e) {

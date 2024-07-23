@@ -137,7 +137,16 @@ void render_str(struct framebuf *fb, struct rect area, str_t str, struct style s
 	for (int i = 0; i < MIN(area.width, str.len); i++) {
 		struct pixel *px = &fb->buf[area.y * fb->width + area.x + i];
 		px->style = style;
-		px->ch = str.ptr[stridx++];
+		if (str.ptr[stridx] == '\t') {
+			// TODO: 8-wide tabs
+			px->style = GUTTER_STYLE;
+			px->ch = '>';
+
+			stridx += 1;
+		} else {
+			px->ch = str.ptr[stridx];
+			stridx += 1;
+		}
 	}
 }
 

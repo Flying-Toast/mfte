@@ -24,9 +24,6 @@ void free_bufline_list(struct bufline *head) {
 }
 
 struct bufline *str_to_buflines(str_t s) {
-	if (str_is_empty(s))
-		return NULL;
-
 	struct bufline *prev = bufline_new_with_string(
 		str_to_string(str_slice_idx_to_eol(s, 0))
 	);

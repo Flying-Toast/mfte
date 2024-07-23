@@ -75,6 +75,20 @@ int main(int argc, char **argv) {
 	}
 #endif
 
+	if (argc > 2)
+		errx(1, "bad arguments");
+
+	struct editor editor;
+	if (argc == 2) {
+		string_t filecont = string_new();
+		if (read_file_to_string(argv[1], &filecont))
+			err(1, "read_file_to_string");
+		editor_new(&editor, string_as_str(filecont));
+		string_free(filecont);
+	} else {
+		editor_new(&editor, STR(""));
+	}
+
 	if (term_init())
 		err(1, "enable raw mode");
 	if (atexit(term_cleanup))
@@ -87,9 +101,6 @@ int main(int argc, char **argv) {
 	struct sigaction winch_act = { .sa_handler = sigwinch_handler };
 	if (sigaction(SIGWINCH, &winch_act, NULL))
 		err(1, "sigaction");
-
-	struct editor editor;
-	editor_new(&editor);
 
 	struct framebuf fb;
 	framebuf_new(&fb, term_width, term_height);

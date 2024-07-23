@@ -23,12 +23,12 @@ void free_bufline_list(struct bufline *head) {
 	}
 }
 
-struct bufline *multiline_string_to_buflines(string_t s) {
-	if (str_is_empty(string_as_str(s)))
+struct bufline *multiline_str_to_buflines(str_t s) {
+	if (str_is_empty(s))
 		return NULL;
 
 	struct bufline *prev = bufline_new_with_string(
-		str_to_string(str_slice_idx_to_eol(string_as_str(s), 0))
+		str_to_string(str_slice_idx_to_eol(s, 0))
 	);
 	size_t idx = prev->string.len + 1;
 	struct bufline *ret = prev;
@@ -36,7 +36,7 @@ struct bufline *multiline_string_to_buflines(string_t s) {
 
 	while (idx < s.len) {
 		head = bufline_new_with_string(
-			str_to_string(str_slice_idx_to_eol(string_as_str(s), idx))
+			str_to_string(str_slice_idx_to_eol(s, idx))
 		);
 		idx += head->string.len + 1;
 		prev->next = head;

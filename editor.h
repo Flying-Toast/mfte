@@ -21,6 +21,7 @@ struct editor {
 	string_t commandline;
 	unsigned should_exit : 1;
 	struct pane foo;
+	string_t errormsg;
 };
 
 void editor_new(struct editor *e);

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <err.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,8 +7,8 @@
 static str_t commandline_prompt = STR(">> ");
 
 static void pane_new(struct pane *p) {
-	string_t foo = STRING("WOOOOHOOO hello there this is some text\nand it is in a pane :-)\nthis line is really jfaalew jfoiewaj oifjaweoijflaonge ong f jaewjf oiawejf oiajewoif jaoiewjf oiajewf043aj9f43aj09j 09j09");
-	p->first_line = multiline_string_to_buflines(foo);
+	str_t foo = STR("WOOOOHOOO hello there this is some text\nand it is in a pane :-)\nthis line is really jfaalew jfoiewaj oifjaweoijflaonge ong f jaewjf oiawejf oiajewoif jaoiewjf oiajewf043aj9f43aj09j 09j09");
+	p->first_line = multiline_str_to_buflines(foo);
 	p->show_line_nums = 1;
 }
 
@@ -18,6 +19,7 @@ static void pane_free(struct pane *p) {
 void editor_new(struct editor *e) {
 	e->mode = MODE_NORMAL;
 	e->commandline = string_new();
+	e->errormsg = string_new();
 	e->should_exit = 0;
 	pane_new(&e->foo);
 }
@@ -25,6 +27,7 @@ void editor_new(struct editor *e) {
 void editor_free(struct editor *e) {
 	pane_free(&e->foo);
 	string_free(e->commandline);
+	string_free(e->errormsg);
 }
 
 static void render_flowed_text(struct framebuf *fb, struct rect area, str_t text, struct style sty) {
@@ -137,9 +140,9 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 	if (rect_empty(area))
 		return;
 
-	int is_commandmode = e->mode == MODE_COMMAND;
+	int commandline_line_used = e->mode == MODE_COMMAND || e->errormsg.len > 0;
 
-	int statusline_y = area.height - (is_commandmode ? 2 : 1);
+	int statusline_y = area.height - (commandline_line_used ? 2 : 1);
 	struct rect statusline_area = {
 		.x = area.x,
 		.y = statusline_y,
@@ -149,19 +152,21 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 	render_statusline(e, fb, statusline_area);
 
 	// render commandline
-	if (is_commandmode) {
-		struct rect cmd_area = { .x = area.x, .y = area.y + area.height - 1, .width = commandline_prompt.len, .height = 1 };
-		render_str(fb, cmd_area, commandline_prompt, GUTTER_STYLE);
-		cmd_area.x += commandline_prompt.len;
-		cmd_area.width = e->commandline.len;
-		render_str(fb, cmd_area, string_as_str(e->commandline), NORMAL_STYLE);
+	struct rect cmdline_area = { .x = area.x, .y = area.y + area.height - 1, .width = area.width, .height = 1 };
+	if (e->mode == MODE_COMMAND) {
+		render_str(fb, cmdline_area, commandline_prompt, GUTTER_STYLE);
+		cmdline_area.x += commandline_prompt.len;
+		cmdline_area.width = e->commandline.len;
+		render_str(fb, cmdline_area, string_as_str(e->commandline), NORMAL_STYLE);
+	} else if (e->errormsg.len > 0) {
+		render_str(fb, cmdline_area, string_as_str(e->errormsg), ERRORMSG_STYLE);
 	}
 
 	struct rect mainview_area = {
 		.x = area.x,
 		.y = area.y,
 		.width = area.width,
-		.height = area.height - (is_commandmode ? 2 : 1),
+		.height = area.height - (commandline_line_used ? 2 : 1),
 	};
 	pane_render(&e->foo, fb, mainview_area);
 }
@@ -169,14 +174,23 @@ void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {
 static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt) {
 	if (EVT_IS_CHAR(evt, ' ')) {
 		string_clear(&e->commandline);
+		string_clear(&e->errormsg);
 		e->mode = MODE_COMMAND;
 		return;
 	}
 }
 
 static void editor_eval_commandline(struct editor *e, str_t cmd) {
-	if (str_eq(cmd, STR("q")))
+	if (str_eq(cmd, STR("q"))) {
 		e->should_exit = 1;
+		return;
+	}
+
+	char errmsg[1000];
+	sprintf(errmsg, "Invalid command: %.*s", (int) cmd.len, cmd.ptr);
+	assert(strlen(errmsg) < sizeof(errmsg));
+	string_free(e->errormsg);
+	e->errormsg = str_to_string((str_t) { .ptr = errmsg, .len = strlen(errmsg) });
 }
 
 static void editor_handle_command_mode_keyevt(struct editor *e, struct keyevt evt) {

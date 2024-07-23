@@ -28,5 +28,6 @@ string_t str_to_string(str_t s);
 str_t str_slice_idx_to_eol(str_t s, size_t idx);
 int str_is_empty(str_t s);
 void string_insert(string_t *s, size_t idx, char ch);
+void string_remove(string_t *s, size_t idx);
 
 #endif

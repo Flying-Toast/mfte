@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "mf_string.h"
@@ -75,10 +76,24 @@ int str_is_empty(str_t s) {
 }
 
 void string_insert(string_t *s, size_t idx, char ch) {
+	assert(idx < s->len);
+
 	string_reserve(s, s->len + 1);
 	memmove(s->ptr + idx + 1, s->ptr + idx, s->len - idx);
 	s->len += 1;
 	s->ptr[idx] = ch;
+}
+
+void string_remove(string_t *s, size_t idx) {
+	assert(idx < s->len);
+
+	if (idx == s->len - 1) {
+		string_pop_char(s);
+		return;
+	}
+
+	memmove(s->ptr + idx, s->ptr + idx + 1, s->len - idx);
+	s->len -= 1;
 }
 
 #ifdef MF_BUILD_TESTS
@@ -105,5 +120,9 @@ void mf_string_run_tests(void) {
 	string_t insert_into_me = STRING("Hello!");
 	string_insert(&insert_into_me, 1, 'p');
 	str_assert_eq(string_as_str(insert_into_me), STR("Hpello!"));
+	string_remove(&insert_into_me, 6);
+	str_assert_eq(string_as_str(insert_into_me), STR("Hpello"));
+	string_remove(&insert_into_me, 0);
+	str_assert_eq(string_as_str(insert_into_me), STR("pello"));
 }
 #endif

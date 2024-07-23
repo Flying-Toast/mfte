@@ -272,6 +272,27 @@ static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt
 		curp->cursor_line_idx += 1;
 		return;
 	}
+
+	if (evt.kind == KEYKIND_DELETE) {
+		struct pane *curp = &e->foo;
+
+		if (curp->cursor_line_idx == curp->cursor_line->string.len)
+			return;
+
+		string_remove(&curp->cursor_line->string, curp->cursor_line_idx);
+		return;
+	}
+
+	if (evt.kind == KEYKIND_BACKSPACE) {
+		struct pane *curp = &e->foo;
+
+		if (curp->cursor_line_idx == 0)
+			return;
+
+		string_remove(&curp->cursor_line->string, curp->cursor_line_idx - 1);
+		curp->cursor_line_idx -= 1;
+		return;
+	}
 }
 
 static void editor_handle_command_mode_keyevt(struct editor *e, struct keyevt evt) {

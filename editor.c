@@ -200,6 +200,17 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		return;
 	}
 
+	if (EVT_IS_CHAR(evt, 'x')) {
+		struct pane *curp = &e->foo;
+
+		if (curp->cursor_line->string.len == 0)
+			return;
+
+		string_remove(&curp->cursor_line->string, curp->cursor_line_idx);
+		curp->cursor_line_idx = MIN(curp->cursor_line->string.len - 1, curp->cursor_line_idx);
+		return;
+	}
+
 	if (EVT_IS_CHAR(evt, '0')) {
 		e->foo.cursor_line_idx = 0;
 		return;
@@ -220,7 +231,7 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		struct pane *curp = &e->foo;
 		if (curp->cursor_line->next != NULL) {
 			curp->cursor_line = curp->cursor_line->next;
-			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
+			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len);
 		}
 		return;
 	}
@@ -229,7 +240,7 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		struct pane *curp = &e->foo;
 		if (curp->cursor_line->prev != NULL) {
 			curp->cursor_line = curp->cursor_line->prev;
-			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
+			curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len);
 		}
 		return;
 	}

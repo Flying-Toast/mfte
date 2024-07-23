@@ -7,6 +7,8 @@
 #include "mf_string.h"
 
 static void string_reserve(string_t *s, size_t cap) {
+	assert(cap > 0);
+
 	if (s->cap >= cap)
 		return;
 	if (s->ptr == NULL) {
@@ -59,8 +61,9 @@ int str_eq(str_t a, str_t b) {
 }
 
 string_t str_to_string(str_t s) {
+	char *ptr = s.len == 0 ? NULL : malloc(s.len);
 	string_t ret = {
-		.ptr = malloc(s.len),
+		.ptr = ptr,
 		.len = s.len,
 		.cap = s.len,
 	};

@@ -74,6 +74,13 @@ int str_is_empty(str_t s) {
 	return s.len == 0;
 }
 
+void string_insert(string_t *s, size_t idx, char ch) {
+	string_reserve(s, s->len + 1);
+	memmove(s->ptr + idx + 1, s->ptr + idx, s->len - idx);
+	s->len += 1;
+	s->ptr[idx] = ch;
+}
+
 #ifdef MF_BUILD_TESTS
 #include <assert.h>
 #include <stdio.h>
@@ -94,5 +101,9 @@ void mf_string_run_tests(void) {
 	str_assert_eq(str_slice_idx_to_eol(s, 12), STR("second line"));
 
 	str_assert_eq(str_slice_idx_to_eol(STR(""), 123), STR(""));
+
+	string_t insert_into_me = STRING("Hello!");
+	string_insert(&insert_into_me, 1, 'p');
+	str_assert_eq(string_as_str(insert_into_me), STR("Hpello!"));
 }
 #endif

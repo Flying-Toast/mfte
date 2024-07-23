@@ -265,6 +265,13 @@ static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt
 		e->mode = MODE_NORMAL;
 		return;
 	}
+
+	if (evt.kind == KEYKIND_CHAR) {
+		struct pane *curp = &e->foo;
+		string_insert(&curp->cursor_line->string, curp->cursor_line_idx, evt.kchar);
+		curp->cursor_line_idx += 1;
+		return;
+	}
 }
 
 static void editor_handle_command_mode_keyevt(struct editor *e, struct keyevt evt) {

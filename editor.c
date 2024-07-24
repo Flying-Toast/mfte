@@ -264,6 +264,14 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		e->mode = MODE_INSERT;
 		return;
 	}
+
+	if (EVT_IS_CHAR(evt, 'G')) {
+		struct bufline *l = curp->cursor_line;
+		while (l->next)
+			l = l->next;
+		curp->cursor_line = l;
+		curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len);
+	}
 }
 
 static void editor_eval_commandline(struct editor *e, str_t cmd) {

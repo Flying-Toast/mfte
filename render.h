@@ -6,8 +6,8 @@
 #include "mf_string.h"
 #include "style.h"
 
-#define MIN(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; (__a) < (__b) ? (__a) : (__b); })
-#define MAX(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; (__a) > (__b) ? (__a) : (__b); })
+#define MIN(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; __a < __b ? __a : __b; })
+#define MAX(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; __a > __b ? __a : __b; })
 
 struct style {
 	uint32_t fg;

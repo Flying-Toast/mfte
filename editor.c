@@ -272,6 +272,17 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		curp->cursor_line = l;
 		curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len);
 	}
+
+	if (EVT_IS_CHAR(evt, 'o')) {
+		struct bufline *cur = curp->cursor_line;
+		struct bufline *new = bufline_new_with_string(string_new());
+		new->next = cur->next;
+		new->prev = cur;
+		cur->next = new;
+		curp->cursor_line_idx = 0;
+		curp->cursor_line = new;
+		e->mode = MODE_INSERT;
+	}
 }
 
 static void editor_eval_commandline(struct editor *e, str_t cmd) {

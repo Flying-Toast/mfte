@@ -8,10 +8,14 @@
 static str_t commandline_prompt = STR(">> ");
 
 static void pane_new(struct pane *p, str_t initial_contents) {
-	p->cursor_line = str_to_buflines(initial_contents);
+	p->_priv_cursor_line = str_to_buflines(initial_contents);
 	p->cursor_line_idx = 0;
 	p->show_line_nums = 1;
 	p->name = STRING("[No Name]");
+}
+
+static struct bufline *pane_get_cursor_line(struct pane *p) {
+	return p->_priv_cursor_line;
 }
 
 struct pane *editor_get_focused_pane(struct editor *e) {
@@ -20,7 +24,7 @@ struct pane *editor_get_focused_pane(struct editor *e) {
 
 static void pane_free(struct pane *p) {
 	struct bufline *first_line;
-	for (first_line = p->cursor_line; first_line->prev; first_line = first_line->prev)
+	for (first_line = pane_get_cursor_line(p); first_line->prev; first_line = first_line->prev)
 		;
 	string_free(p->name);
 	free_bufline_list(first_line);
@@ -91,6 +95,28 @@ static int cursor_idx_to_col(str_t cursor_line, size_t cursor_idx) {
 	return ret;
 }
 
+static void pane_line_up(struct pane *p) {
+	if (p->_priv_cursor_line->prev != NULL) {
+		p->_priv_cursor_line = p->_priv_cursor_line->prev;
+		if (p->_priv_cursor_line->string.len == 0) {
+			p->cursor_line_idx = 0;
+		} else {
+			p->cursor_line_idx = MIN(p->cursor_line_idx, p->_priv_cursor_line->string.len - 1);
+		}
+	}
+}
+
+static void pane_line_down(struct pane *p) {
+	if (p->_priv_cursor_line->next != NULL) {
+		p->_priv_cursor_line = p->_priv_cursor_line->next;
+		if (p->_priv_cursor_line->string.len == 0) {
+			p->cursor_line_idx = 0;
+		} else {
+			p->cursor_line_idx = MIN(p->cursor_line_idx, p->_priv_cursor_line->string.len - 1);
+		}
+	}
+}
+
 static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
@@ -107,14 +133,17 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 
 	struct rect line_area = content_area;
 	line_area.height = 1;
-	fb->cursorx = line_area.x + cursor_idx_to_col(string_as_str(p->cursor_line->string), p->cursor_line_idx);
+	{
+		str_t str = string_as_str(pane_get_cursor_line(p)->string);
+		fb->cursorx = line_area.x + cursor_idx_to_col(str, p->cursor_line_idx);
+	}
 	fb->cursory = line_area.y;
 
 	struct rect line_num_area = gutter_area;
 	line_num_area.height = 1;
 
 	size_t cur_line_no = 1;
-	for (struct bufline *bl = p->cursor_line; bl != NULL; bl = bl->next) {
+	for (struct bufline *bl = pane_get_cursor_line(p); bl != NULL; bl = bl->next) {
 		if (line_area.y >= content_area.height)
 			break;
 
@@ -235,11 +264,12 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (EVT_IS_CHAR(evt, 'x')) {
-		if (curp->cursor_line->string.len == 0)
+		struct bufline *curlin = pane_get_cursor_line(curp);
+		if (curlin->string.len == 0)
 			return;
 
-		string_remove(&curp->cursor_line->string, curp->cursor_line_idx);
-		curp->cursor_line_idx = MIN(curp->cursor_line->string.len - 1, curp->cursor_line_idx);
+		string_remove(&curlin->string, curp->cursor_line_idx);
+		curp->cursor_line_idx = MIN(curlin->string.len - 1, curp->cursor_line_idx);
 		return;
 	}
 
@@ -249,7 +279,7 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (EVT_IS_CHAR(evt, 'a')) {
-		curp->cursor_line_idx = MIN(curp->cursor_line->string.len, curp->cursor_line_idx + 1);
+		curp->cursor_line_idx = MIN(pane_get_cursor_line(curp)->string.len, curp->cursor_line_idx + 1);
 		e->mode = MODE_INSERT;
 		return;
 	}
@@ -260,56 +290,46 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (EVT_IS_CHAR(evt, 'j')) {
-		if (curp->cursor_line->next != NULL) {
-			curp->cursor_line = curp->cursor_line->next;
-			if (curp->cursor_line->string.len == 0) {
-				curp->cursor_line_idx = 0;
-			} else {
-				curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
-			}
-		}
+		pane_line_down(curp);
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'k')) {
-		if (curp->cursor_line->prev != NULL) {
-			curp->cursor_line = curp->cursor_line->prev;
-			if (curp->cursor_line->string.len == 0) {
-				curp->cursor_line_idx = 0;
-			} else {
-				curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
-			}
-		}
+		pane_line_up(curp);
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'l')) {
-		curp->cursor_line_idx = MIN(curp->cursor_line->string.len - 1, curp->cursor_line_idx + 1);
+		struct bufline *curlin = pane_get_cursor_line(curp);
+		curp->cursor_line_idx = MIN(curlin->string.len - 1, curp->cursor_line_idx + 1);
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'A')) {
-		curp->cursor_line_idx = curp->cursor_line->string.len;
+		curp->cursor_line_idx = pane_get_cursor_line(curp)->string.len;
 		e->mode = MODE_INSERT;
 		return;
 	}
 
 	if (EVT_IS_CHAR(evt, 'G')) {
-		struct bufline *l = curp->cursor_line;
-		while (l->next)
-			l = l->next;
-		curp->cursor_line = l;
-		curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
+		struct bufline *l = pane_get_cursor_line(curp);
+
+		while (l->next != NULL) {
+			pane_line_down(curp);
+			l = pane_get_cursor_line(curp);
+		}
+
+		curp->cursor_line_idx = MIN(curp->cursor_line_idx, l->string.len - 1);
 	}
 
 	if (EVT_IS_CHAR(evt, 'o')) {
-		struct bufline *cur = curp->cursor_line;
+		struct bufline *cur = pane_get_cursor_line(curp);
 		struct bufline *new = bufline_new_with_string(string_new());
 		new->next = cur->next;
 		new->prev = cur;
 		cur->next = new;
 		curp->cursor_line_idx = 0;
-		curp->cursor_line = new;
+		pane_line_down(curp);
 		e->mode = MODE_INSERT;
 	}
 }
@@ -337,16 +357,17 @@ static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt
 	}
 
 	if (evt.kind == KEYKIND_CHAR) {
-		string_insert(&curp->cursor_line->string, curp->cursor_line_idx, evt.kchar);
+		struct bufline *curlin = pane_get_cursor_line(curp);
+		string_insert(&curlin->string, curp->cursor_line_idx, evt.kchar);
 		curp->cursor_line_idx += 1;
 		return;
 	}
 
 	if (evt.kind == KEYKIND_DELETE) {
-		if (curp->cursor_line_idx == curp->cursor_line->string.len)
+		if (curp->cursor_line_idx == pane_get_cursor_line(curp)->string.len)
 			return;
 
-		string_remove(&curp->cursor_line->string, curp->cursor_line_idx);
+		string_remove(&pane_get_cursor_line(curp)->string, curp->cursor_line_idx);
 		return;
 	}
 
@@ -354,7 +375,7 @@ static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt
 		if (curp->cursor_line_idx == 0)
 			return;
 
-		string_remove(&curp->cursor_line->string, curp->cursor_line_idx - 1);
+		string_remove(&pane_get_cursor_line(curp)->string, curp->cursor_line_idx - 1);
 		curp->cursor_line_idx -= 1;
 		return;
 	}

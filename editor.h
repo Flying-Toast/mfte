@@ -15,8 +15,10 @@ enum editor_mode {
 struct pane {
 	// line the cursor is on
 	struct bufline *_priv_cursor_line;
+	struct bufline *screen_top_line;
 	// index into `cursor_line->string` of the cursor
 	size_t cursor_line_idx;
+	size_t _priv_cursor_line_no;
 	unsigned show_line_nums : 1;
 	// name displayed in statusline
 	string_t name;

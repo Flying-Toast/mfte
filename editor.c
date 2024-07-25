@@ -9,6 +9,8 @@ static str_t commandline_prompt = STR(">> ");
 
 static void pane_new(struct pane *p, str_t initial_contents) {
 	p->_priv_cursor_line = str_to_buflines(initial_contents);
+	p->screen_top_line = p->_priv_cursor_line;
+	p->_priv_cursor_line_no = 1;
 	p->cursor_line_idx = 0;
 	p->show_line_nums = 1;
 	p->name = STRING("[No Name]");
@@ -20,6 +22,11 @@ static struct bufline *pane_get_cursor_line(struct pane *p) {
 
 struct pane *editor_get_focused_pane(struct editor *e) {
 	return &e->foobar123lol;
+}
+
+// line number of the line cursor is on
+static size_t pane_get_cursor_line_no(struct pane *p) {
+	return p->_priv_cursor_line_no;
 }
 
 static void pane_free(struct pane *p) {
@@ -103,6 +110,7 @@ static void pane_line_up(struct pane *p) {
 		} else {
 			p->cursor_line_idx = MIN(p->cursor_line_idx, p->_priv_cursor_line->string.len - 1);
 		}
+		p->_priv_cursor_line_no -= 1;
 	}
 }
 
@@ -114,6 +122,7 @@ static void pane_line_down(struct pane *p) {
 		} else {
 			p->cursor_line_idx = MIN(p->cursor_line_idx, p->_priv_cursor_line->string.len - 1);
 		}
+		p->_priv_cursor_line_no += 1;
 	}
 }
 
@@ -121,6 +130,9 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
 		return;
+
+	// TODO: proper viewport scrolling
+	p->screen_top_line = pane_get_cursor_line(p);
 
 	struct rect gutter_area = { .x = area.x, .y = area.y };
 	struct rect content_area = area;
@@ -142,14 +154,19 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 	struct rect line_num_area = gutter_area;
 	line_num_area.height = 1;
 
-	size_t cur_line_no = 1;
-	for (struct bufline *bl = pane_get_cursor_line(p); bl != NULL; bl = bl->next) {
+	int cursorline_screen_y = 0;
+	for (struct bufline *bl = p->screen_top_line; bl != NULL; bl = bl->next) {
 		if (line_area.y >= content_area.height)
 			break;
 
 		char linenum[10];
-		snprintf(linenum, sizeof(linenum), "%3zu ", cur_line_no);
-		cur_line_no++;
+		if (bl == pane_get_cursor_line(p)) {
+			snprintf(linenum, sizeof(linenum), "%-3zu ", pane_get_cursor_line_no(p));
+			fb->cursory += cursorline_screen_y;
+		} else {
+			snprintf(linenum, sizeof(linenum), "%3d ", cursorline_screen_y + 1);
+		}
+		cursorline_screen_y += 1;
 
 		str_t linenum_str = { .ptr = linenum, .len = strlen(linenum) };
 		render_flowed_text(fb, line_num_area, linenum_str, GUTTER_STYLE);

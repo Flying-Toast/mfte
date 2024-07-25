@@ -11,6 +11,7 @@ static void string_reserve(string_t *s, size_t cap) {
 
 	if (s->cap >= cap)
 		return;
+
 	if (s->ptr == NULL) {
 		s->ptr = malloc(cap);
 	} else {
@@ -71,18 +72,23 @@ int str_eq(str_t a, str_t b) {
 }
 
 string_t str_to_string(str_t s) {
-	char *ptr = s.len == 0 ? NULL : malloc(s.len);
-	string_t ret = {
-		.ptr = ptr,
-		.len = s.len,
-		.cap = s.len,
-	};
-	memcpy(ret.ptr, s.ptr, s.len);
-	return ret;
+	if (s.len == 0) {
+		return string_new();
+	} else {
+		string_t ret = {
+			.ptr = malloc(s.len),
+			.len = s.len,
+			.cap = s.len,
+		};
+		memcpy(ret.ptr, s.ptr, s.len);
+		return ret;
+	}
 }
 
 str_t str_slice_idx_to_eol(str_t s, size_t start_idx) {
-	str_t ret = { .len = 0, .ptr = s.ptr + start_idx };
+	str_t ret = { .len = 0, .ptr = s.ptr };
+	if (s.ptr != NULL)
+		ret.ptr += start_idx;
 
 	while (start_idx + ret.len < s.len && s.ptr[start_idx + ret.len] != '\n') {
 		ret.len++;

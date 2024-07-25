@@ -1,6 +1,6 @@
 CC=clang
 OBJECTS=main.o render.o input.o editor.o mf_string.o bufline.o
-CFLAGS=-Wall -DMF_BUILD_TESTS
+CFLAGS=-Wall -fsanitize=undefined -DMF_BUILD_TESTS
 
 mf: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o mf

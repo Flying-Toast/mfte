@@ -105,7 +105,7 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 			break;
 
 		char linenum[10];
-		sprintf(linenum, "%3zu ", cur_line_no);
+		snprintf(linenum, sizeof(linenum), "%3zu ", cur_line_no);
 		cur_line_no++;
 
 		str_t linenum_str = { .ptr = linenum, .len = strlen(linenum) };
@@ -307,10 +307,10 @@ static void editor_eval_commandline(struct editor *e, str_t cmd) {
 	}
 
 	char errmsg[1000];
-	sprintf(errmsg, "Invalid command: %.*s", (int) cmd.len, cmd.ptr);
+	snprintf(errmsg, sizeof(errmsg), "Invalid command: %.*s", (int) cmd.len, cmd.ptr);
 	assert(strlen(errmsg) < sizeof(errmsg));
-	string_free(e->errormsg);
-	e->errormsg = str_to_string((str_t) { .ptr = errmsg, .len = strlen(errmsg) });
+	string_clear(&e->errormsg);
+	string_append(&e->errormsg, cstr_as_str(errmsg));
 }
 
 static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt) {
@@ -352,14 +352,14 @@ static void editor_handle_command_mode_keyevt(struct editor *e, struct keyevt ev
 		e->mode = MODE_NORMAL;
 		break;
 	case KEYKIND_CHAR:
-		string_push_char(&e->commandline, evt.kchar);
+		string_push(&e->commandline, evt.kchar);
 		break;
 	case KEYKIND_ENTER:
 		e->mode = MODE_NORMAL;
 		editor_eval_commandline(e, string_as_str(e->commandline));
 		break;
 	case KEYKIND_BACKSPACE:
-		string_pop_char(&e->commandline);
+		string_pop(&e->commandline);
 		break;
 	default:
 		break;

@@ -32,20 +32,22 @@ void string_free(string_t s) {
 		free(s.ptr);
 }
 
-void string_append_cstr(string_t *s, char *cstr) {
-	size_t clen = strlen(cstr);
-
-	string_reserve(s, s->len + clen);
-	memcpy(s->ptr + s->len, cstr, clen);
-	s->len += clen;
+str_t cstr_as_str(char *cstr) {
+	return (str_t) { .ptr = cstr, .len = strlen(cstr) };
 }
 
-void string_push_char(string_t *s, char ch) {
+void string_append(string_t *s, str_t other) {
+	string_reserve(s, s->len + other.len);
+	memcpy(s->ptr + s->len, other.ptr, other.len);
+	s->len += other.len;
+}
+
+void string_push(string_t *s, char ch) {
 	string_reserve(s, s->len + 1);
 	s->ptr[s->len++] = ch;
 }
 
-void string_pop_char(string_t *s) {
+void string_pop(string_t *s) {
 	if (s->len > 0)
 		s->len--;
 }
@@ -113,7 +115,7 @@ void string_remove(string_t *s, size_t idx) {
 	assert(idx < s->len);
 
 	if (idx == s->len - 1) {
-		string_pop_char(s);
+		string_pop(s);
 		return;
 	}
 

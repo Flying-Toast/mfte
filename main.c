@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 
 		struct pane *curp = editor_get_focused_pane(&editor);
 		string_clear(&curp->name);
-		string_append_cstr(&curp->name, argv[1]);
+		string_append(&curp->name, cstr_as_str(argv[1]));
 	} else {
 		editor_new(&editor, STR(""));
 	}

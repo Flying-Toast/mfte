@@ -25,13 +25,13 @@ void framebuf_display(struct framebuf *fb) {
 
 			// foreground
 			if ((x == 0 && y == 0) || prevpx.style.fg != pixel.style.fg) {
-				sprintf(colorbuf, "\033[38;2;%d;%d;%dm", R_BYTE(pixel.style.fg), G_BYTE(pixel.style.fg), B_BYTE(pixel.style.fg));
+				snprintf(colorbuf, sizeof(colorbuf), "\033[38;2;%d;%d;%dm", R_BYTE(pixel.style.fg), G_BYTE(pixel.style.fg), B_BYTE(pixel.style.fg));
 				fwrite(colorbuf, 1, strlen(colorbuf), stdout);
 			}
 
 			// background
 			if ((x == 0 && y == 0) || prevpx.style.bg != pixel.style.bg) {
-				sprintf(colorbuf, "\033[48;2;%d;%d;%dm", R_BYTE(pixel.style.bg), G_BYTE(pixel.style.bg), B_BYTE(pixel.style.bg));
+				snprintf(colorbuf, sizeof(colorbuf), "\033[48;2;%d;%d;%dm", R_BYTE(pixel.style.bg), G_BYTE(pixel.style.bg), B_BYTE(pixel.style.bg));
 				fwrite(colorbuf, 1, strlen(colorbuf), stdout);
 			}
 
@@ -49,7 +49,7 @@ void framebuf_display(struct framebuf *fb) {
 		break;
 	}
 	char moveesc[sizeof("\033[XXX;XXXH") - 1] = "";
-	sprintf(moveesc, "\033[%d;%dH", fb->cursory + 1, fb->cursorx + 1);
+	snprintf(moveesc, sizeof(moveesc), "\033[%d;%dH", fb->cursory + 1, fb->cursorx + 1);
 	fwrite(moveesc, 1, strlen(moveesc), stdout);
 }
 

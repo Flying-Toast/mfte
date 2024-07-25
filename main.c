@@ -85,6 +85,10 @@ int main(int argc, char **argv) {
 			err(1, "read_file_to_string");
 		editor_new(&editor, string_as_str(filecont));
 		string_free(filecont);
+
+		struct pane *curp = editor_get_focused_pane(&editor);
+		string_clear(&curp->name);
+		string_append_cstr(&curp->name, argv[1]);
 	} else {
 		editor_new(&editor, STR(""));
 	}

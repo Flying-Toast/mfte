@@ -10,9 +10,10 @@ static void pane_new(struct pane *p, str_t initial_contents) {
 	p->cursor_line = str_to_buflines(initial_contents);
 	p->cursor_line_idx = 0;
 	p->show_line_nums = 1;
+	p->name = STRING("[No Name]");
 }
 
-static struct pane *editor_get_focused_pane(struct editor *e) {
+struct pane *editor_get_focused_pane(struct editor *e) {
 	return &e->foobar123lol;
 }
 
@@ -20,6 +21,7 @@ static void pane_free(struct pane *p) {
 	struct bufline *first_line;
 	for (first_line = p->cursor_line; first_line->prev; first_line = first_line->prev)
 		;
+	string_free(p->name);
 	free_bufline_list(first_line);
 }
 
@@ -142,6 +144,19 @@ static void render_statusline(struct editor *e, struct framebuf *fb, struct rect
 
 	struct rect mode_area = { .x = area.x, .y = area.y, .width = modestr.len, .height = 1 };
 	render_str(fb, mode_area, modestr, modestyle);
+
+	struct pane *curp = editor_get_focused_pane(e);
+
+	struct rect name_area = {
+		.x = area.x + mode_area.width,
+		.y = area.y,
+		// +2 for an extra ' ' on both sides
+		.width = curp->name.len + 2,
+		.height = 1,
+	};
+	render_solid_color(fb, name_area, STATUSLINE_SECONDARY_STYLE.bg);
+	name_area.x += 1;
+	render_str(fb, name_area, string_as_str(curp->name), STATUSLINE_SECONDARY_STYLE);
 }
 
 void editor_render(struct editor *e, struct framebuf *fb, struct rect area) {

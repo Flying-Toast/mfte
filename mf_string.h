@@ -30,5 +30,6 @@ int str_is_empty(str_t s);
 void string_insert(string_t *s, size_t idx, char ch);
 void string_remove(string_t *s, size_t idx);
 [[nodiscard]] int read_file_to_string(char *path, string_t *s);
+void string_append_cstr(string_t *s, char *cstr);
 
 #endif

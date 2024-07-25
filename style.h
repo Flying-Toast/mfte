@@ -20,6 +20,7 @@
 #define STATUSLINE_NORMAL_MODE_STYLE ((struct style) { .fg = BG_COLOR, .bg = GREEN_COLOR })
 #define STATUSLINE_COMMAND_MODE_STYLE ((struct style) { .fg = BG_COLOR, .bg = GREEN_COLOR })
 #define STATUSLINE_INSERT_MODE_STYLE ((struct style) { .fg = BG_COLOR, .bg = BLUE_COLOR })
+#define STATUSLINE_SECONDARY_STYLE ((struct style) { .fg = WHITE_COLOR, .bg = LIGHTERBG_COLOR, })
 #define ERRORMSG_STYLE ((struct style) { .fg = RED_COLOR, .bg = BG_COLOR })
 
 #endif

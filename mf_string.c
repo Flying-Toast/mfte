@@ -32,6 +32,14 @@ void string_free(string_t s) {
 		free(s.ptr);
 }
 
+void string_append_cstr(string_t *s, char *cstr) {
+	size_t clen = strlen(cstr);
+
+	string_reserve(s, s->len + clen);
+	memcpy(s->ptr + s->len, cstr, clen);
+	s->len += clen;
+}
+
 void string_push_char(string_t *s, char ch) {
 	string_reserve(s, s->len + 1);
 	s->ptr[s->len++] = ch;

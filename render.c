@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "config.h"
 #include "render.h"
 
 #define CLR_SCREEN "\033[2J"
@@ -132,20 +133,24 @@ void render_str(struct framebuf *fb, struct rect area, str_t str, struct style s
 	if (rect_empty(area))
 		return;
 
-	int stridx = 0;
-
-	for (int i = 0; i < MIN(area.width, str.len); i++) {
-		struct pixel *px = &fb->buf[area.y * fb->width + area.x + i];
-		px->style = style;
+	int rendered_width = 0;
+	for (int stridx = 0; stridx < str.len && rendered_width < area.width; stridx++) {
+		struct pixel *px = &fb->buf[area.y * fb->width + area.x + rendered_width];
 		if (str.ptr[stridx] == '\t') {
-			// TODO: 8-wide tabs
-			px->style = GUTTER_STYLE;
-			px->ch = '>';
+			if (rendered_width + TAB_WIDTH > area.width)
+				break;
 
-			stridx += 1;
+			for (int j = 0; j < TAB_WIDTH; j++) {
+				px->style = style;
+				px->ch = ' ';
+				px++;
+			}
+
+			rendered_width += TAB_WIDTH;
 		} else {
 			px->ch = str.ptr[stridx];
-			stridx += 1;
+			px->style = style;
+			rendered_width += 1;
 		}
 	}
 }

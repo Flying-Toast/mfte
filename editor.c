@@ -2,6 +2,7 @@
 #include <err.h>
 #include <stdio.h>
 #include <string.h>
+#include "config.h"
 #include "editor.h"
 
 static str_t commandline_prompt = STR(">> ");
@@ -77,6 +78,19 @@ static void editor_render_cursor(struct editor *e, struct framebuf *fb, struct r
 
 }
 
+// factor in tab width
+static int cursor_idx_to_col(str_t cursor_line, size_t cursor_idx) {
+	int ret = 0;
+	for (int i = 0; i < cursor_idx; i++) {
+		if (cursor_line.ptr[i] == '\t') {
+			ret += TAB_WIDTH;
+		} else {
+			ret += 1;
+		}
+	}
+	return ret;
+}
+
 static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 	area = framebuf_intersect(fb, area);
 	if (rect_empty(area))
@@ -93,7 +107,7 @@ static void pane_render(struct pane *p, struct framebuf *fb, struct rect area) {
 
 	struct rect line_area = content_area;
 	line_area.height = 1;
-	fb->cursorx = line_area.x + p->cursor_line_idx;
+	fb->cursorx = line_area.x + cursor_idx_to_col(string_as_str(p->cursor_line->string), p->cursor_line_idx);
 	fb->cursory = line_area.y;
 
 	struct rect line_num_area = gutter_area;
@@ -285,7 +299,7 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		while (l->next)
 			l = l->next;
 		curp->cursor_line = l;
-		curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len);
+		curp->cursor_line_idx = MIN(curp->cursor_line_idx, curp->cursor_line->string.len - 1);
 	}
 
 	if (EVT_IS_CHAR(evt, 'o')) {

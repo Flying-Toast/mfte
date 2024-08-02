@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -147,10 +148,21 @@ void render_str(struct framebuf *fb, struct rect area, str_t str, struct style s
 			}
 
 			rendered_width += TAB_WIDTH;
+		} else if (isprint(str.ptr[stridx])) {
+				px->ch = str.ptr[stridx];
+				px->style = style;
+				rendered_width += 1;
 		} else {
-			px->ch = str.ptr[stridx];
-			px->style = style;
-			rendered_width += 1;
+			char hexbuf[5];
+			if (rendered_width + sizeof(hexbuf) - 1 > area.width)
+				break;
+
+			int slen = snprintf(hexbuf, sizeof(hexbuf), "<%02x>", str.ptr[stridx] & 0xff);
+			for (int j = 0; j < sizeof(hexbuf) - 1; j++) {
+				px[j].ch = hexbuf[j];
+				px[j].style = NONPRINT_STYLE;
+			}
+			rendered_width += slen;
 		}
 	}
 }

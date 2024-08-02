@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <ctype.h>
 #include <err.h>
 #include <stdio.h>
 #include <string.h>
@@ -89,14 +90,17 @@ static void editor_render_cursor(struct editor *e, struct framebuf *fb, struct r
 
 }
 
-// factor in tab width
+// factor in tab width, nonprint characters "<XX>" width, ...
 static int cursor_idx_to_col(str_t cursor_line, size_t cursor_idx) {
 	int ret = 0;
 	for (int i = 0; i < cursor_idx; i++) {
+		// TODO: more generic/less "hardcodey" way of handling >1-wide characters
 		if (cursor_line.ptr[i] == '\t') {
 			ret += TAB_WIDTH;
-		} else {
+		} else if (isprint(cursor_line.ptr[i])) {
 			ret += 1;
+		} else {
+			ret += sizeof("<XX>") - 1;
 		}
 	}
 	return ret;

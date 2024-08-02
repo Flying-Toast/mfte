@@ -63,7 +63,7 @@ static void sigwinch_handler(int signo) {
 }
 
 int main(int argc, char **argv) {
-	int stdoutbufsize = 10000;
+	int stdoutbufsize = 100000;
 	char *stdoutbuf = malloc(stdoutbufsize);
 	if (setvbuf(stdout, stdoutbuf, _IOFBF, stdoutbufsize))
 		err(1, "setvbuf");

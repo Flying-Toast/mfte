@@ -5,7 +5,7 @@
 
 #define BG_COLOR 0x282c34
 #define WHITE_COLOR 0xabb2bf
-#define GREEN_COLOR 0x98c379
+#define GREEN_COLOR 0x98bb6c
 #define BLUE_COLOR 0x61afef
 #define RED_COLOR 0xe06c75
 #define YELLOW_COLOR 0xe5c07b

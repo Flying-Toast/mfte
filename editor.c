@@ -332,6 +332,17 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 		return;
 	}
 
+	if (EVT_IS_CHAR(evt, 'D')) {
+		pane_get_cursor_line(curp)->string.len = curp->cursor_line_idx;
+		return;
+	}
+
+	if (EVT_IS_CHAR(evt, 'C')) {
+		pane_get_cursor_line(curp)->string.len = curp->cursor_line_idx;
+		e->mode = MODE_INSERT;
+		return;
+	}
+
 	if (EVT_IS_CHAR(evt, 'G')) {
 		struct bufline *l = pane_get_cursor_line(curp);
 

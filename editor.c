@@ -385,14 +385,12 @@ static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt
 	if (evt.kind == KEYKIND_ESCAPE) {
 		curp->cursor_line_idx = curp->cursor_line_idx > 0 ? curp->cursor_line_idx - 1 : 0;
 		e->mode = MODE_NORMAL;
-		return;
 	}
 
 	if (evt.kind == KEYKIND_CHAR) {
 		struct bufline *curlin = pane_get_cursor_line(curp);
 		string_insert(&curlin->string, curp->cursor_line_idx, evt.kchar);
 		curp->cursor_line_idx += 1;
-		return;
 	}
 
 	if (evt.kind == KEYKIND_DELETE) {
@@ -400,16 +398,41 @@ static void editor_handle_insert_mode_keyevt(struct editor *e, struct keyevt evt
 			return;
 
 		string_remove(&pane_get_cursor_line(curp)->string, curp->cursor_line_idx);
-		return;
 	}
 
 	if (evt.kind == KEYKIND_BACKSPACE) {
-		if (curp->cursor_line_idx == 0)
-			return;
+		if (curp->cursor_line_idx == 0) {
+			struct bufline *origcurlin = pane_get_cursor_line(curp);
+			struct bufline *origprev = origcurlin->prev;
+			if (origprev == NULL)
+				return;
+			size_t origlen = origprev->string.len;
+			string_append(&origprev->string, string_as_str(origcurlin->string));
+			pane_line_up(curp);
+			origprev->next = origcurlin->next;
+			origcurlin->next->prev = origprev;
+			bufline_free(origcurlin);
+			curp->cursor_line_idx = origlen;
+		} else {
+			string_remove(&pane_get_cursor_line(curp)->string, curp->cursor_line_idx - 1);
+			curp->cursor_line_idx -= 1;
+		}
+	}
 
-		string_remove(&pane_get_cursor_line(curp)->string, curp->cursor_line_idx - 1);
-		curp->cursor_line_idx -= 1;
-		return;
+	if (evt.kind == KEYKIND_ENTER) {
+		struct bufline *curlin = pane_get_cursor_line(curp);
+		string_t tail = str_to_string(
+			str_slice_idx_to_eol(string_as_str(curlin->string), curp->cursor_line_idx)
+		);
+		curlin->string.len = curp->cursor_line_idx;
+		struct bufline *newl = bufline_new_with_string(tail);
+		newl->prev = curlin;
+		newl->next = curlin->next;
+		if (curlin->next)
+			curlin->next->prev = newl;
+		curlin->next = newl;
+		pane_line_down(curp);
+		curp->cursor_line_idx = 0;
 	}
 }
 

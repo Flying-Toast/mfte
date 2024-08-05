@@ -1,3 +1,4 @@
 *.o
 /mf
 compile_commands.json
+.cache

@@ -7,8 +7,6 @@
 #include "mf_string.h"
 
 static void string_reserve(string_t *s, size_t cap) {
-	assert(cap > 0);
-
 	if (s->cap >= cap)
 		return;
 
@@ -38,6 +36,8 @@ str_t cstr_as_str(char *cstr) {
 }
 
 void string_append(string_t *s, str_t other) {
+	if (other.len == 0)
+		return;
 	string_reserve(s, s->len + other.len);
 	memcpy(s->ptr + s->len, other.ptr, other.len);
 	s->len += other.len;

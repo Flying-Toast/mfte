@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "mf_string.h"
-#include "style.h"
 
 #define MIN(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; __a < __b ? __a : __b; })
 #define MAX(a, b) ({ typeof(a) __a = a; typeof(b) __b = b; __a > __b ? __a : __b; })

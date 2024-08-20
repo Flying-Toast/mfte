@@ -139,8 +139,10 @@ int read_file_to_string(char *path, string_t *s) {
 		return -1;
 	string_reserve(s, st.st_size);
 	size_t nread;
-	if ((nread = read(fd, s->ptr, st.st_size)) == -1)
+	if ((nread = read(fd, s->ptr, st.st_size)) == -1) {
+		close(fd);
 		return -1;
+	}
 	s->len = nread;
 	close(fd);
 	return 0;

@@ -322,7 +322,8 @@ static void editor_handle_normal_mode_keyevt(struct editor *e, struct keyevt evt
 
 	if (EVT_IS_CHAR(evt, 'l')) {
 		struct bufline *curlin = pane_get_cursor_line(curp);
-		curp->cursor_line_idx = MIN(curlin->string.len - 1, curp->cursor_line_idx + 1);
+		if (curlin->string.len > 0)
+			curp->cursor_line_idx = MIN(curlin->string.len - 1, curp->cursor_line_idx + 1);
 		return;
 	}
 
